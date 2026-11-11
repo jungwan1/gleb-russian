@@ -172,6 +172,62 @@ body.songs h1{font-size:28px;text-align:left;margin:4px 0 8px}
   margin:0 0 14px;color:#ffe7b0;font-size:13px;font-weight:500;
   text-shadow:0 1px 8px rgba(0,0,0,.35);
 }
+.playall{
+  width:100%;margin:2px 0 18px;min-height:84px;padding:14px 16px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  border-radius:22px;cursor:pointer;
+  border:1.5px solid rgba(255,232,176,.92);
+  background:linear-gradient(165deg,rgba(255,250,236,.84) 0%,rgba(255,243,210,.5) 48%,rgba(214,176,96,.4) 100%);
+  color:#3a2b12;
+  font-family:"Noto Serif KR",serif;font-size:24px;font-weight:600;letter-spacing:.02em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 14px 32px rgba(0,0,0,.22),0 0 26px rgba(234,196,110,.42);
+}
+.playall:focus-visible{outline:2px solid #fff4d2;outline-offset:3px}
+.playall:disabled{opacity:.55;cursor:default}
+.playall-mark{
+  width:48px;height:48px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:"Playfair Display",serif;font-size:24px;color:#3a2b12;
+  background:linear-gradient(180deg,#fff3c9 0%,#e7c56a 52%,#b8893a 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 6px 14px rgba(141,106,40,.35);
+}
+.playall-bar{
+  display:flex;align-items:center;gap:8px;
+  margin:0 0 14px;padding:8px;
+  background:rgba(255,252,246,.55);
+  border:1px solid rgba(255,255,255,.62);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-radius:16px;
+  box-shadow:0 8px 22px rgba(0,0,0,.12);
+}
+.playall-bar[hidden]{display:none}
+.playall-bar button{
+  appearance:none;flex-shrink:0;border-radius:999px;padding:10px 12px;
+  font-family:"Noto Sans KR",sans-serif;font-size:13px;font-weight:700;color:#3a2b12;
+  border:1px solid rgba(180,138,60,.45);
+  background:linear-gradient(180deg,#ead087,#c4a153);
+}
+.playall-bar button:disabled{opacity:.4}
+.playall-bar button:focus-visible{outline:2px solid #fff4d2;outline-offset:2px}
+.playall-status{
+  flex:1;min-width:0;margin:0;text-align:center;
+  color:#3a2b12;font-size:13px;font-weight:700;line-height:1.35;
+  word-break:keep-all;
+}
+.song-card.current{
+  box-shadow:0 12px 30px rgba(0,0,0,.18),0 0 0 2px rgba(232,201,120,.95),0 0 22px rgba(234,196,110,.55);
+}
+.song-live{
+  border-radius:999px;padding:2px 7px;
+  background:rgba(234,208,135,.55);color:#6d5318;
+  font-family:"Noto Sans KR",sans-serif;font-size:11px;font-weight:700;line-height:1.4;
+}
+.song-live[hidden]{display:none}
+@media (max-width:360px){
+  .playall{min-height:74px;font-size:21px}
+  .playall-mark{width:42px;height:42px;font-size:22px}
+  .playall-bar button{padding:10px 8px;font-size:12px}
+}
 .song-list{display:flex;flex-direction:column;gap:12px}
 .song-card{
   background:rgba(255,252,246,.55);
@@ -200,6 +256,7 @@ body.songs h1{font-size:28px;text-align:left;margin:4px 0 8px}
 }
 .song-title{
   flex:1;min-width:0;
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;
   font-family:"Noto Serif KR",serif;font-size:18px;line-height:1.35;
   word-break:keep-all;
 }
