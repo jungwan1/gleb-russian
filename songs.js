@@ -12,4 +12,5 @@ const SONGS = [
   { title: "새벽 두 시의 온도", url: "https://suno.com/song/8209a1cf-83aa-4f31-9cba-c5c4ff807c7a", duration: "3:32" },
   { title: "쉬었다고 말했지만", url: "https://suno.com/song/260cc211-0acb-499a-b200-c19bc2d1f2fc", duration: "2:22" },
   { title: "먼 길", url: "https://suno.com/song/fa7c34cf-6fc2-433b-87a7-da5ec83dd912", duration: "3:42" },
+  { title: "러시아에서 들을 노래", url: "https://suno.com/song/45188d67-48fb-4670-b8af-ebe1e3d17fac", duration: "3:23" },
 ];
