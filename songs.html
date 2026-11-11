@@ -13,12 +13,49 @@
 <div class="wrap">
   <a class="back" href="index.html">← 홈</a>
   <h1>글렙의 노래</h1>
+  <p class="song-lead">곡을 누르면 이 페이지에서 재생됩니다.</p>
   <div id="songList" class="song-list"></div>
 </div>
 <script src="songs.js"></script>
 <script>
 const root = document.getElementById("songList");
 const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
+
+function sunoEmbed(url) {
+  let parsed;
+  try { parsed = new URL(url); } catch (e) { return ""; }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+  const host = parsed.hostname.replace(/^www\./i, "");
+  if (host !== "suno.com") return "";
+  const parts = parsed.pathname.split("/").filter(Boolean);
+  const key = parts.findIndex((part) => part === "song" || part === "embed");
+  const id = key >= 0 ? parts[key + 1] : "";
+  if (!id || !/^[A-Za-z0-9-]+$/.test(id)) return "";
+  return "https://suno.com/embed/" + id;
+}
+
+function closeCard(card) {
+  card.classList.remove("open");
+  const button = card.querySelector(".song-item");
+  button.setAttribute("aria-expanded", "false");
+  card.querySelector(".song-cue").textContent = "▶";
+  card.querySelector(".song-panel").hidden = true;
+  const frame = card.querySelector("iframe");
+  if (frame.getAttribute("src")) frame.src = "about:blank";
+}
+
+function openCard(card) {
+  document.querySelectorAll(".song-card.open").forEach((other) => {
+    if (other !== card) closeCard(other);
+  });
+  const frame = card.querySelector("iframe");
+  if (frame.getAttribute("src") !== card.dataset.embed) frame.src = card.dataset.embed;
+  card.classList.add("open");
+  card.querySelector(".song-item").setAttribute("aria-expanded", "true");
+  card.querySelector(".song-cue").textContent = "접기";
+  card.querySelector(".song-panel").hidden = false;
+}
+
 if (!songs.length) {
   const empty = document.createElement("p");
   empty.className = "song-empty";
@@ -30,27 +67,71 @@ if (!songs.length) {
     const title = song && song.title ? String(song.title) : "";
     const url = song && typeof song.url === "string" ? song.url.trim() : "";
     const duration = song && song.duration ? String(song.duration) : "";
+    const embed = sunoEmbed(url);
     if (!title || !/^https?:\/\//i.test(url)) return;
     shown += 1;
-    const a = document.createElement("a");
-    a.className = "song-item";
-    a.setAttribute("href", url);
-    a.setAttribute("target", "_blank");
-    a.setAttribute("rel", "noopener");
+
+    const card = document.createElement("article");
+    card.className = "song-card";
+    if (embed) card.dataset.embed = embed;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "song-item";
+    button.setAttribute("aria-expanded", "false");
+
     const num = document.createElement("span");
     num.className = "song-num";
     num.textContent = String(shown);
+
     const name = document.createElement("span");
     name.className = "song-title";
     name.textContent = title;
-    a.append(num, name);
+    button.append(num, name);
     if (duration) {
       const dur = document.createElement("span");
       dur.className = "song-dur";
       dur.textContent = duration;
-      a.append(dur);
+      button.append(dur);
     }
-    root.appendChild(a);
+    const cue = document.createElement("span");
+    cue.className = "song-cue";
+    cue.setAttribute("aria-hidden", "true");
+    cue.textContent = embed ? "▶" : "";
+    button.append(cue);
+
+    const panel = document.createElement("div");
+    panel.className = "song-panel";
+    panel.hidden = true;
+    const wrap = document.createElement("div");
+    wrap.className = "song-frame-wrap";
+    const frame = document.createElement("iframe");
+    frame.className = "song-frame";
+    frame.title = title + " 재생";
+    frame.setAttribute("loading", "lazy");
+    frame.setAttribute("allow", "autoplay; encrypted-media; fullscreen; picture-in-picture");
+    frame.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    wrap.append(frame);
+    panel.append(wrap);
+
+    const ext = document.createElement("a");
+    ext.className = "song-ext";
+    ext.textContent = "Suno에서 열기";
+    ext.setAttribute("href", url);
+    ext.setAttribute("target", "_blank");
+    ext.setAttribute("rel", "noopener");
+
+    if (embed) {
+      button.addEventListener("click", () => {
+        if (card.classList.contains("open")) closeCard(card);
+        else openCard(card);
+      });
+    } else {
+      button.disabled = true;
+    }
+
+    card.append(button, panel, ext);
+    root.appendChild(card);
   });
 }
 </script>
