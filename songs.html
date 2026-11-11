@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>글렙의 노래</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,400&family=Noto+Serif+KR:wght@500;600&family=Noto+Sans+KR:wght@400;500;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="songs">
+<div class="wrap">
+  <a class="back" href="index.html">← 홈</a>
+  <h1>글렙의 노래</h1>
+  <div id="songList" class="song-list"></div>
+</div>
+<script src="songs.js"></script>
+<script>
+const root = document.getElementById("songList");
+const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
+if (!songs.length) {
+  const empty = document.createElement("p");
+  empty.className = "song-empty";
+  empty.textContent = "아직 등록된 노래가 없습니다.";
+  root.appendChild(empty);
+} else {
+  let shown = 0;
+  songs.forEach((song) => {
+    const title = song && song.title ? String(song.title) : "";
+    const url = song && typeof song.url === "string" ? song.url.trim() : "";
+    const duration = song && song.duration ? String(song.duration) : "";
+    if (!title || !/^https?:\/\//i.test(url)) return;
+    shown += 1;
+    const a = document.createElement("a");
+    a.className = "song-item";
+    a.setAttribute("href", url);
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener");
+    const num = document.createElement("span");
+    num.className = "song-num";
+    num.textContent = String(shown);
+    const name = document.createElement("span");
+    name.className = "song-title";
+    name.textContent = title;
+    a.append(num, name);
+    if (duration) {
+      const dur = document.createElement("span");
+      dur.className = "song-dur";
+      dur.textContent = duration;
+      a.append(dur);
+    }
+    root.appendChild(a);
+  });
+}
+</script>
+</body>
+</html>
