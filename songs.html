@@ -35,15 +35,15 @@ const playAllStatus = document.getElementById("playAllStatus");
 const playPrev = document.getElementById("playPrev");
 const playNext = document.getElementById("playNext");
 const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
-// Suno starts ?autoplay=1 about a second after the embed loads, and it does not
-// tell this page when a song ends. Wait the listed duration plus this pad,
-// then a short gap before the next song opens.
-const ADVANCE_PAD_MS = 2300;
-const SONG_GAP_MS = 5000;
+// Suno ?autoplay=1 starts sound about 2.2s after the iframe src is set, and when a
+// clip ends the embed restarts that same clip. Open the next iframe one start-up
+// earlier so its sound begins as this clip ends, then clear this iframe so it
+// cannot play again. SONG_GAP_MS is intentionally gone.
+const SUNO_START_MS = 2200;
 const cards = [];
 let playlist = false;
 let cursor = -1;
-let timer = 0;
+let ticket = 0;
 
 function sunoEmbed(url) {
   let parsed;
@@ -71,9 +71,10 @@ function playSrc(embed) {
   return embed + "?autoplay=1&t=" + Date.now();
 }
 
-function clearTimer() {
-  clearTimeout(timer);
-  timer = 0;
+function silenceCard(card) {
+  const frame = card.querySelector("iframe");
+  const src = frame.getAttribute("src");
+  if (src && src !== "about:blank") frame.src = "about:blank";
 }
 
 function closeCard(card) {
@@ -81,22 +82,74 @@ function closeCard(card) {
   const button = card.querySelector(".song-item");
   button.setAttribute("aria-expanded", "false");
   card.querySelector(".song-cue").textContent = "▶";
-  card.querySelector(".song-panel").hidden = true;
-  const frame = card.querySelector("iframe");
-  if (frame.getAttribute("src")) frame.src = "about:blank";
+  const panel = card.querySelector(".song-panel");
+  panel.classList.remove("preloading");
+  panel.hidden = true;
+  silenceCard(card);
+}
+
+function showCard(card) {
+  cards.forEach((other) => {
+    if (other === card) return;
+    other.classList.remove("open");
+    other.querySelector(".song-item").setAttribute("aria-expanded", "false");
+    other.querySelector(".song-cue").textContent = "▶";
+    const panel = other.querySelector(".song-panel");
+    panel.classList.remove("preloading");
+    panel.hidden = true;
+  });
+  const panel = card.querySelector(".song-panel");
+  panel.classList.remove("preloading");
+  panel.hidden = false;
+  card.classList.add("open");
+  card.querySelector(".song-item").setAttribute("aria-expanded", "true");
+  card.querySelector(".song-cue").textContent = "접기";
+}
+
+function primeCard(card) {
+  const panel = card.querySelector(".song-panel");
+  panel.hidden = false;
+  panel.classList.add("preloading");
+  card.querySelector("iframe").src = playSrc(card.dataset.embed);
+}
+
+function scrollCard(card) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  card.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+}
+
+function scheduleHandoff(index, myTicket) {
+  const card = cards[index];
+  const ms = Number(card.dataset.seconds || 0) * 1000;
+  if (!(ms > 0)) return;
+  if (index + 1 < cards.length) {
+    setTimeout(() => {
+      if (!playlist || ticket !== myTicket || cursor !== index) return;
+      primeCard(cards[index + 1]);
+      scheduleHandoff(index + 1, myTicket);
+    }, ms);
+  }
+  setTimeout(() => {
+    if (!playlist || ticket !== myTicket || cursor !== index) return;
+    silenceCard(card);
+    if (index + 1 >= cards.length) {
+      finishPlaylist();
+      return;
+    }
+    cursor = index + 1;
+    showCard(cards[cursor]);
+    setCurrent(cards[cursor]);
+    updateTransport();
+    scrollCard(cards[cursor]);
+  }, ms + SUNO_START_MS);
 }
 
 function openCard(card) {
   cards.forEach((other) => {
     if (other !== card) closeCard(other);
   });
-  const frame = card.querySelector("iframe");
-  const src = playSrc(card.dataset.embed);
-  if (frame.getAttribute("src") !== src) frame.src = src;
-  card.classList.add("open");
-  card.querySelector(".song-item").setAttribute("aria-expanded", "true");
-  card.querySelector(".song-cue").textContent = "접기";
-  card.querySelector(".song-panel").hidden = false;
+  primeCard(card);
+  showCard(card);
 }
 
 function setCurrent(card) {
@@ -128,18 +181,20 @@ function updateTransport() {
 }
 
 function stopPlaylist() {
+  ticket += 1;
   playlist = false;
-  clearTimer();
+  cursor = -1;
   setCurrent(null);
   cards.forEach(closeCard);
   updateTransport();
 }
 
 function finishPlaylist() {
+  ticket += 1;
   playlist = false;
-  clearTimer();
   cursor = cards.length;
   setCurrent(null);
+  cards.forEach(closeCard);
   playAllLabel.textContent = "전곡 듣기";
   playAll.setAttribute("aria-pressed", "false");
   playAllBar.hidden = false;
@@ -154,17 +209,21 @@ function startAt(index) {
     finishPlaylist();
     return;
   }
+  ticket += 1;
+  const myTicket = ticket;
   playlist = true;
   cursor = index;
-  const card = cards[index];
-  openCard(card);
-  setCurrent(card);
-  clearTimer();
-  const seconds = Number(card.dataset.seconds || 0);
-  if (seconds > 0) timer = setTimeout(() => startAt(index + 1), seconds * 1000 + ADVANCE_PAD_MS + SONG_GAP_MS);
+  cards.forEach(silenceCard);
+  primeAndShow(index, myTicket);
   updateTransport();
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  card.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  scrollCard(cards[index]);
+}
+
+function primeAndShow(index, myTicket) {
+  primeCard(cards[index]);
+  showCard(cards[index]);
+  setCurrent(cards[index]);
+  scheduleHandoff(index, myTicket);
 }
 
 if (!songs.length) {
@@ -239,7 +298,6 @@ if (!songs.length) {
     const frame = document.createElement("iframe");
     frame.className = "song-frame";
     frame.title = title + " 재생";
-    frame.setAttribute("loading", "lazy");
     frame.setAttribute("allow", "autoplay; encrypted-media; fullscreen; picture-in-picture");
     frame.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
     wrap.append(frame);
