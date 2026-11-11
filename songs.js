@@ -9,4 +9,5 @@ const SONGS = [
   { title: "임시 저장", url: "https://suno.com/song/f7bd7ffe-a75e-4143-9ef1-2667781f0653", duration: "2:43" },
   { title: "어린 날에게", url: "https://suno.com/song/c14455e6-4a78-4e2b-a512-9855cbb20228", duration: "2:55" },
   { title: "새벽 두 시의 온도", url: "https://suno.com/song/8209a1cf-83aa-4f31-9cba-c5c4ff807c7a", duration: "3:32" },
+  { title: "건너뛰는 노래", url: "https://suno.com/song/fd96afbf-f743-4bfe-b284-5b1250dc2b79", duration: "2:46" },
 ];
