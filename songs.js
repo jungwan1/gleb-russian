@@ -11,4 +11,5 @@ const SONGS = [
   { title: "건너뛰는 노래", url: "https://suno.com/song/fd96afbf-f743-4bfe-b284-5b1250dc2b79", duration: "2:46" },
   { title: "새벽 두 시의 온도", url: "https://suno.com/song/8209a1cf-83aa-4f31-9cba-c5c4ff807c7a", duration: "3:32" },
   { title: "쉬었다고 말했지만", url: "https://suno.com/song/260cc211-0acb-499a-b200-c19bc2d1f2fc", duration: "2:22" },
+  { title: "먼 길", url: "https://suno.com/song/fa7c34cf-6fc2-433b-87a7-da5ec83dd912", duration: "3:42" },
 ];
