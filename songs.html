@@ -36,8 +36,10 @@ const playPrev = document.getElementById("playPrev");
 const playNext = document.getElementById("playNext");
 const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
 // Suno starts ?autoplay=1 about a second after the embed loads, and it does not
-// tell this page when a song ends. Wait the listed duration plus this pad.
+// tell this page when a song ends. Wait the listed duration plus this pad,
+// then a short gap before the next song opens.
 const ADVANCE_PAD_MS = 2300;
+const SONG_GAP_MS = 5000;
 const cards = [];
 let playlist = false;
 let cursor = -1;
@@ -159,7 +161,7 @@ function startAt(index) {
   setCurrent(card);
   clearTimer();
   const seconds = Number(card.dataset.seconds || 0);
-  if (seconds > 0) timer = setTimeout(() => startAt(index + 1), seconds * 1000 + ADVANCE_PAD_MS);
+  if (seconds > 0) timer = setTimeout(() => startAt(index + 1), seconds * 1000 + ADVANCE_PAD_MS + SONG_GAP_MS);
   updateTransport();
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   card.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
@@ -177,6 +179,7 @@ if (!songs.length) {
     const title = song && song.title ? String(song.title) : "";
     const url = song && typeof song.url === "string" ? song.url.trim() : "";
     const duration = song && song.duration ? String(song.duration) : "";
+    const credit = (song && song.credit ? String(song.credit) : (typeof DEFAULT_CREDIT === "string" ? DEFAULT_CREDIT : "")).trim();
     const embed = sunoEmbed(url);
     if (!title || !/^https?:\/\//i.test(url) || !embed) return;
     shown += 1;
@@ -198,7 +201,16 @@ if (!songs.length) {
 
     const name = document.createElement("span");
     name.className = "song-title";
-    name.textContent = title;
+    const nameText = document.createElement("span");
+    nameText.className = "song-name";
+    nameText.textContent = title;
+    name.append(nameText);
+    if (credit) {
+      const creditEl = document.createElement("span");
+      creditEl.className = "song-credit";
+      creditEl.textContent = credit;
+      name.append(creditEl);
+    }
 
     const live = document.createElement("span");
     live.className = "song-live";
