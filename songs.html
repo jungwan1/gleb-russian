@@ -20,6 +20,24 @@
 <body class="songs">
 <div class="wrap">
   <a class="back" href="index.html">← 홈</a>
+  <figure class="artist">
+    <img class="is-on" src="images/artist-1.jpg" alt="구름 바다 위 절벽에서 팔을 편 글렙">
+    <img src="images/artist-2.jpg" alt="초원을 달리는 기차 문가에 기타를 들고 앉은 글렙" loading="lazy">
+  </figure>
+  <script>
+  (function () {
+    var box = document.querySelector(".artist");
+    if (!box || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var slides = box.querySelectorAll("img");
+    if (slides.length < 2) return;
+    var i = 0;
+    setInterval(function () {
+      slides[i].classList.remove("is-on");
+      i = (i + 1) % slides.length;
+      slides[i].classList.add("is-on");
+    }, 6000);
+  })();
+  </script>
   <button type="button" class="playall" id="playAll" aria-pressed="false">
     <span class="playall-mark" aria-hidden="true">♪</span>
     <span id="playAllLabel">전곡 듣기</span>
