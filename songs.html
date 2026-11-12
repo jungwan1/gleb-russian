@@ -234,7 +234,6 @@ if (!songs.length) {
   let shown = 0;
   songs.forEach((song) => {
     const title = song && song.title ? String(song.title) : "";
-    const url = song && typeof song.url === "string" ? song.url.trim() : "";
     const audio = song && typeof song.audio === "string" ? song.audio.trim() : "";
     const duration = song && song.duration ? String(song.duration) : "";
     const credit = (song && song.credit ? String(song.credit) : (typeof DEFAULT_CREDIT === "string" ? DEFAULT_CREDIT : "")).trim();
@@ -294,15 +293,6 @@ if (!songs.length) {
     });
 
     card.append(button);
-    if (url) {
-      const ext = document.createElement("a");
-      ext.className = "song-ext";
-      ext.textContent = "Suno에서 열기";
-      ext.setAttribute("href", url);
-      ext.setAttribute("target", "_blank");
-      ext.setAttribute("rel", "noopener");
-      card.append(ext);
-    }
     cards.push(card);
     root.appendChild(card);
   });
