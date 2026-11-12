@@ -25,9 +25,11 @@
   </div>
   <div id="songList" class="song-list"></div>
 </div>
+<audio id="player" preload="auto" playsinline></audio>
 <script src="songs.js"></script>
 <script>
 const root = document.getElementById("songList");
+const player = document.getElementById("player");
 const playAll = document.getElementById("playAll");
 const playAllLabel = document.getElementById("playAllLabel");
 const playAllBar = document.getElementById("playAllBar");
@@ -35,121 +37,17 @@ const playAllStatus = document.getElementById("playAllStatus");
 const playPrev = document.getElementById("playPrev");
 const playNext = document.getElementById("playNext");
 const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
-// Suno ?autoplay=1 starts sound about 2.2s after the iframe src is set, and when a
-// clip ends the embed restarts that same clip. Open the next iframe one start-up
-// earlier so its sound begins as this clip ends, then clear this iframe so it
-// cannot play again. SONG_GAP_MS is intentionally gone.
-const SUNO_START_MS = 2200;
+const GAP = "audio/gap3s.mp3";
+const FADE_MS = 900;
 const cards = [];
 let playlist = false;
 let cursor = -1;
-let ticket = 0;
+let phase = "idle";
+let fadeFrame = 0;
 
-function sunoEmbed(url) {
-  let parsed;
-  try { parsed = new URL(url); } catch (e) { return ""; }
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
-  const host = parsed.hostname.replace(/^www\./i, "");
-  if (host !== "suno.com") return "";
-  const parts = parsed.pathname.split("/").filter(Boolean);
-  const key = parts.findIndex((part) => part === "song" || part === "embed");
-  const id = key >= 0 ? parts[key + 1] : "";
-  if (!id || !/^[A-Za-z0-9-]+$/.test(id)) return "";
-  return "https://suno.com/embed/" + id;
-}
-
-function parseDuration(value) {
-  const parts = String(value || "").trim().split(":");
-  if (!parts.length || parts.some((part) => !/^\d+$/.test(part))) return 0;
-  const nums = parts.map((part) => Number(part));
-  if (nums.length === 2) return nums[0] * 60 + nums[1];
-  if (nums.length === 3) return nums[0] * 3600 + nums[1] * 60 + nums[2];
-  return 0;
-}
-
-function playSrc(embed) {
-  return embed + "?autoplay=1&t=" + Date.now();
-}
-
-function silenceCard(card) {
-  const frame = card.querySelector("iframe");
-  const src = frame.getAttribute("src");
-  if (src && src !== "about:blank") frame.src = "about:blank";
-}
-
-function closeCard(card) {
-  card.classList.remove("open");
-  const button = card.querySelector(".song-item");
-  button.setAttribute("aria-expanded", "false");
-  card.querySelector(".song-cue").textContent = "▶";
-  const panel = card.querySelector(".song-panel");
-  panel.classList.remove("preloading");
-  panel.hidden = true;
-  silenceCard(card);
-}
-
-function showCard(card) {
-  cards.forEach((other) => {
-    if (other === card) return;
-    other.classList.remove("open");
-    other.querySelector(".song-item").setAttribute("aria-expanded", "false");
-    other.querySelector(".song-cue").textContent = "▶";
-    const panel = other.querySelector(".song-panel");
-    panel.classList.remove("preloading");
-    panel.hidden = true;
-  });
-  const panel = card.querySelector(".song-panel");
-  panel.classList.remove("preloading");
-  panel.hidden = false;
-  card.classList.add("open");
-  card.querySelector(".song-item").setAttribute("aria-expanded", "true");
-  card.querySelector(".song-cue").textContent = "접기";
-}
-
-function primeCard(card) {
-  const panel = card.querySelector(".song-panel");
-  panel.hidden = false;
-  panel.classList.add("preloading");
-  card.querySelector("iframe").src = playSrc(card.dataset.embed);
-}
-
-function scrollCard(card) {
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  card.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
-}
-
-function scheduleHandoff(index, myTicket) {
-  const card = cards[index];
-  const ms = Number(card.dataset.seconds || 0) * 1000;
-  if (!(ms > 0)) return;
-  if (index + 1 < cards.length) {
-    setTimeout(() => {
-      if (!playlist || ticket !== myTicket || cursor !== index) return;
-      primeCard(cards[index + 1]);
-      scheduleHandoff(index + 1, myTicket);
-    }, ms);
-  }
-  setTimeout(() => {
-    if (!playlist || ticket !== myTicket || cursor !== index) return;
-    silenceCard(card);
-    if (index + 1 >= cards.length) {
-      finishPlaylist();
-      return;
-    }
-    cursor = index + 1;
-    showCard(cards[cursor]);
-    setCurrent(cards[cursor]);
-    updateTransport();
-    scrollCard(cards[cursor]);
-  }, ms + SUNO_START_MS);
-}
-
-function openCard(card) {
-  cards.forEach((other) => {
-    if (other !== card) closeCard(other);
-  });
-  primeCard(card);
-  showCard(card);
+function fileName(src) {
+  try { return new URL(src, location.href).pathname.split("/").pop(); }
+  catch (e) { return ""; }
 }
 
 function setCurrent(card) {
@@ -157,16 +55,22 @@ function setCurrent(card) {
     const on = item === card;
     item.classList.toggle("current", on);
     item.querySelector(".song-live").hidden = !on;
+    const cue = item.querySelector(".song-cue");
+    cue.textContent = on ? "❚❚" : "▶";
     if (on) item.setAttribute("aria-current", "true");
     else item.removeAttribute("aria-current");
   });
 }
 
 function updateTransport() {
-  if (!playlist) {
-    playAllBar.hidden = true;
+  if (!playlist || cursor < 0) {
+    if (playAllStatus.textContent !== "끝까지 들었습니다") playAllBar.hidden = true;
     playAllLabel.textContent = "전곡 듣기";
     playAll.setAttribute("aria-pressed", "false");
+    if (cursor < 0) {
+      playPrev.disabled = true;
+      playNext.disabled = true;
+    }
     return;
   }
   const card = cards[cursor];
@@ -174,56 +78,150 @@ function updateTransport() {
   playAllLabel.textContent = "정지";
   playAll.setAttribute("aria-pressed", "true");
   let text = (cursor + 1) + " / " + cards.length + " · " + card.dataset.title;
-  if (!Number(card.dataset.seconds)) text += " · 길이가 없어 직접 넘겨 주세요";
+  if (phase === "gap") text += " · 쉬는 중";
   playAllStatus.textContent = text;
   playPrev.disabled = cursor <= 0;
   playNext.disabled = cursor >= cards.length - 1;
 }
 
-function stopPlaylist() {
-  ticket += 1;
+function updateSession() {
+  if (!("mediaSession" in navigator)) return;
+  const card = cursor >= 0 ? cards[cursor] : null;
+  if (!card) {
+    navigator.mediaSession.metadata = null;
+    navigator.mediaSession.playbackState = "none";
+    return;
+  }
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: card.dataset.title,
+    artist: "정완(글렙)",
+    album: "글렙의 노래",
+  });
+  navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
+  if (phase === "song" && Number.isFinite(player.duration) && player.duration > 0) {
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: player.duration,
+        playbackRate: player.playbackRate || 1,
+        position: Math.min(player.currentTime || 0, player.duration),
+      });
+    } catch (e) {}
+  }
+}
+
+function fadeIn() {
+  cancelAnimationFrame(fadeFrame);
+  player.volume = 1;
+  const start = performance.now();
+  const step = (now) => {
+    const t = (now - start) / FADE_MS;
+    if (!(t >= 0) || t >= 1) {
+      player.volume = 1;
+      return;
+    }
+    player.volume = t;
+    fadeFrame = requestAnimationFrame(step);
+  };
+  fadeFrame = requestAnimationFrame(step);
+}
+
+function stopPlayback() {
+  cancelAnimationFrame(fadeFrame);
+  phase = "idle";
   playlist = false;
   cursor = -1;
+  player.pause();
+  player.removeAttribute("src");
   setCurrent(null);
-  cards.forEach(closeCard);
   updateTransport();
+  updateSession();
 }
 
 function finishPlaylist() {
-  ticket += 1;
+  cancelAnimationFrame(fadeFrame);
+  phase = "idle";
   playlist = false;
-  cursor = cards.length;
+  player.pause();
+  player.removeAttribute("src");
   setCurrent(null);
-  cards.forEach(closeCard);
   playAllLabel.textContent = "전곡 듣기";
   playAll.setAttribute("aria-pressed", "false");
   playAllBar.hidden = false;
   playAllStatus.textContent = "끝까지 들었습니다";
-  playPrev.disabled = cards.length < 1;
+  playPrev.disabled = true;
   playNext.disabled = true;
+  cursor = -1;
+  updateSession();
 }
 
-function startAt(index) {
-  if (!cards.length) return;
+function startSong(index, fade) {
   if (index < 0 || index >= cards.length) {
     finishPlaylist();
     return;
   }
-  ticket += 1;
-  const myTicket = ticket;
   playlist = true;
   cursor = index;
-  cards.forEach(silenceCard);
-  primeAndShow(index, myTicket);
+  phase = "song";
+  cancelAnimationFrame(fadeFrame);
+  player.volume = 1;
+  player.src = cards[index].dataset.audio;
+  const pending = player.play();
+  if (pending) pending.catch(() => {});
+  if (fade) fadeIn();
+  setCurrent(cards[index]);
   updateTransport();
-  scrollCard(cards[index]);
+  updateSession();
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  cards[index].scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
 }
 
-function primeAndShow(index, myTicket) {
-  primeCard(cards[index]);
-  showCard(cards[index]);
-  setCurrent(cards[index]);
-  scheduleHandoff(index, myTicket);
+function beginGap() {
+  phase = "gap";
+  cancelAnimationFrame(fadeFrame);
+  player.volume = 1;
+  player.src = GAP;
+  const pending = player.play();
+  if (pending) pending.catch(() => {});
+  updateTransport();
+  updateSession();
+}
+
+player.addEventListener("ended", () => {
+  const name = fileName(player.currentSrc || player.src);
+  if (name === "gap3s.mp3") {
+    if (phase !== "gap") return;
+    startSong(cursor + 1, true);
+    return;
+  }
+  if (phase !== "song") return;
+  if (!playlist || cursor + 1 >= cards.length) {
+    finishPlaylist();
+    return;
+  }
+  beginGap();
+});
+player.addEventListener("play", updateSession);
+player.addEventListener("pause", updateSession);
+player.addEventListener("timeupdate", () => {
+  if (phase === "song") updateSession();
+});
+
+if ("mediaSession" in navigator) {
+  const bind = (name, fn) => {
+    try { navigator.mediaSession.setActionHandler(name, fn); } catch (e) {}
+  };
+  bind("play", () => {
+    const pending = player.play();
+    if (pending) pending.catch(() => {});
+  });
+  bind("pause", () => player.pause());
+  bind("previoustrack", () => {
+    if (cursor > 0) startSong(cursor - 1, false);
+    else if (cursor === 0) startSong(0, false);
+  });
+  bind("nexttrack", () => {
+    if (cursor + 1 < cards.length) startSong(cursor + 1, false);
+  });
 }
 
 if (!songs.length) {
@@ -237,22 +235,20 @@ if (!songs.length) {
   songs.forEach((song) => {
     const title = song && song.title ? String(song.title) : "";
     const url = song && typeof song.url === "string" ? song.url.trim() : "";
+    const audio = song && typeof song.audio === "string" ? song.audio.trim() : "";
     const duration = song && song.duration ? String(song.duration) : "";
     const credit = (song && song.credit ? String(song.credit) : (typeof DEFAULT_CREDIT === "string" ? DEFAULT_CREDIT : "")).trim();
-    const embed = sunoEmbed(url);
-    if (!title || !/^https?:\/\//i.test(url) || !embed) return;
+    if (!title || !audio) return;
     shown += 1;
 
     const card = document.createElement("article");
     card.className = "song-card";
-    card.dataset.embed = embed;
+    card.dataset.audio = audio;
     card.dataset.title = title;
-    card.dataset.seconds = String(parseDuration(duration));
 
     const button = document.createElement("button");
     button.type = "button";
     button.className = "song-item";
-    button.setAttribute("aria-expanded", "false");
 
     const num = document.createElement("span");
     num.className = "song-num";
@@ -270,13 +266,11 @@ if (!songs.length) {
       creditEl.textContent = credit;
       name.append(creditEl);
     }
-
     const live = document.createElement("span");
     live.className = "song-live";
     live.textContent = "재생 중";
     live.hidden = true;
     name.append(live);
-
     button.append(num, name);
     if (duration) {
       const dur = document.createElement("span");
@@ -290,37 +284,25 @@ if (!songs.length) {
     cue.textContent = "▶";
     button.append(cue);
 
-    const panel = document.createElement("div");
-    panel.className = "song-panel";
-    panel.hidden = true;
-    const wrap = document.createElement("div");
-    wrap.className = "song-frame-wrap";
-    const frame = document.createElement("iframe");
-    frame.className = "song-frame";
-    frame.title = title + " 재생";
-    frame.setAttribute("allow", "autoplay; encrypted-media; fullscreen; picture-in-picture");
-    frame.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-    wrap.append(frame);
-    panel.append(wrap);
-
-    const ext = document.createElement("a");
-    ext.className = "song-ext";
-    ext.textContent = "Suno에서 열기";
-    ext.setAttribute("href", url);
-    ext.setAttribute("target", "_blank");
-    ext.setAttribute("rel", "noopener");
-
     button.addEventListener("click", () => {
       const index = cards.indexOf(card);
-      if (card.classList.contains("open") && (!playlist || cursor === index)) {
-        stopPlaylist();
+      if (playlist && cursor === index) {
+        stopPlayback();
         return;
       }
-      if (playlist) startAt(index);
-      else openCard(card);
+      startSong(index, false);
     });
 
-    card.append(button, panel, ext);
+    card.append(button);
+    if (url) {
+      const ext = document.createElement("a");
+      ext.className = "song-ext";
+      ext.textContent = "Suno에서 열기";
+      ext.setAttribute("href", url);
+      ext.setAttribute("target", "_blank");
+      ext.setAttribute("rel", "noopener");
+      card.append(ext);
+    }
     cards.push(card);
     root.appendChild(card);
   });
@@ -328,15 +310,14 @@ if (!songs.length) {
 }
 
 playAll.addEventListener("click", () => {
-  if (playlist) stopPlaylist();
-  else startAt(0);
+  if (playlist) stopPlayback();
+  else startSong(0, false);
 });
 playPrev.addEventListener("click", () => {
-  if (!cards.length) return;
-  startAt(playlist ? cursor - 1 : cards.length - 1);
+  if (cursor > 0) startSong(cursor - 1, false);
 });
 playNext.addEventListener("click", () => {
-  if (cursor < cards.length - 1) startAt(cursor + 1);
+  if (cursor + 1 < cards.length) startSong(cursor + 1, false);
 });
 </script>
 </body>

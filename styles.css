@@ -75,6 +75,9 @@ h1{
 }
 .modes button.on{background:linear-gradient(180deg,#ead087,#c4a153);border-color:rgba(180,138,60,.45)}
 audio{display:none}
+body.songs audio#player{
+  display:block;position:fixed;width:1px;height:1px;opacity:0;pointer-events:none
+}
 .play.on{box-shadow:0 0 0 2px rgba(196,161,83,.45)}
 body.lesson .wrap{max-width:680px}
 .back{display:inline-block;color:#fff8e8;text-decoration:none;font-weight:700;margin:0 0 12px;
