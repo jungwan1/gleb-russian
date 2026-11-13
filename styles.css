@@ -131,7 +131,8 @@ body.songs .slide-title{
   font-size:clamp(20px,7cqw,36px);color:#fff8e8;
   text-shadow:0 2px 18px rgba(0,0,0,.8),0 1px 2px rgba(0,0,0,.9);
 }
-body.songs.playing .slide-title{display:block}
+body.songs.playing .slide-title,
+body.songs .stage-art.is-plain .slide-title{display:block}
 body.songs .stage-credit{
   margin:0;text-align:center;font-family:"Noto Sans KR",sans-serif;font-weight:500;line-height:1.2;
   font-size:clamp(8px,3.2cqw,16px);color:#fff8e8;letter-spacing:.01em;

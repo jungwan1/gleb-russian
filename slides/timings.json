@@ -343,5 +343,37 @@
    "img": "10-5.jpg",
    "section": "outro"
   }
+ ],
+ "11": [
+  {
+   "t": 0.0,
+   "img": "11-1.jpg",
+   "section": "verse1 (rap: 사람 많은 곳… 알람 하나에 다시 일어나)"
+  },
+  {
+   "t": 32.0,
+   "img": "11-2.jpg",
+   "section": "chorus (그 웃음 뒤에 숨긴 짐을 알아)"
+  },
+  {
+   "t": 53.5,
+   "img": "11-3.jpg",
+   "section": "verse2 (rap: 불 꺼진 방… 현관 앞에서 고쳐 쓰던 그 미소)"
+  },
+  {
+   "t": 79.5,
+   "img": "11-2.jpg",
+   "section": "chorus2"
+  },
+  {
+   "t": 94.0,
+   "img": "11-4.jpg",
+   "section": "bridge (하루 끝에 켜진 작은 불빛처럼)"
+  },
+  {
+   "t": 116.0,
+   "img": "11-5.jpg",
+   "section": "last chorus (variant: 사람 많은 곳에서도 너는 빛났지) + instrumental outro"
+  }
  ]
 }

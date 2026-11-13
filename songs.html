@@ -132,6 +132,10 @@ function scrollFromPointer(e) {
 listScroll.addEventListener("scroll", updateListThumb, { passive: true });
 window.addEventListener("resize", updateListThumb);
 if (window.ResizeObserver) new ResizeObserver(updateListThumb).observe(listScroll);
+document.querySelector(".stage-art").addEventListener("transitionend", (e) => {
+  if (e.propertyName !== "width") return;
+  if (cursor >= 0 && cards[cursor] && !pageHidden()) revealRow(cards[cursor]);
+});
 listTrack.addEventListener("pointerdown", (e) => {
   const thumb = listThumb.getBoundingClientRect();
   const onThumb = e.clientY >= thumb.top && e.clientY <= thumb.bottom;
@@ -156,6 +160,7 @@ function showCover(card) {
     document.getElementById("dockTitle").textContent = "";
     document.getElementById("slideTitle").textContent = "";
     document.getElementById("stageCredit").textContent = (typeof DEFAULT_CREDIT === "string" && DEFAULT_CREDIT) ? DEFAULT_CREDIT : "작사·작곡 정완(글렙)";
+    document.querySelector(".stage-art").classList.remove("is-plain");
     hideSlides();
     queueThumb();
     return;
@@ -170,6 +175,7 @@ function showCover(card) {
   document.getElementById("dockTitle").textContent = card.dataset.title;
   document.getElementById("slideTitle").textContent = card.dataset.title;
   document.getElementById("stageCredit").textContent = card.dataset.credit || "";
+  document.querySelector(".stage-art").classList.toggle("is-plain", card.dataset.plain === "1");
   hideSlides();
   syncSlides();
   queueThumb();
@@ -501,6 +507,7 @@ if (!songs.length) {
     card.dataset.cover = cover;
     card.dataset.title = title;
     card.dataset.credit = credit;
+    if (song && song.plain) card.dataset.plain = "1";
 
     const button = document.createElement("button");
     button.type = "button";
@@ -510,7 +517,6 @@ if (!songs.length) {
     thumb.className = "song-thumb";
     thumb.alt = "";
     thumb.src = cover;
-
     const num = document.createElement("span");
     num.className = "song-num";
     num.textContent = String(shown);

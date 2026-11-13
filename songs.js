@@ -2,6 +2,7 @@
 // 번호는 적지 않아도 목록에 있는 순서대로 자동으로 붙습니다.
 // title 은 제목, audio 는 재생할 mp3 경로입니다. duration(길이, 예: "2:43")은 선택입니다.
 // credit(만든 이)도 선택입니다. 적지 않으면 모든 곡에 "작사·작곡 정완(글렙)"이 붙습니다. 곡마다 다르면 그 줄에만 credit: "다른 이름" 을 적으세요.
+// plain 이 true 이면 표지 그림에 글자가 없으므로, 목록 그림과 표지 위에 제목과 만든 이를 올립니다.
 // 연속 듣기는 곡이 끝나면 짧은 쉼 뒤 다음 곡으로 넘깁니다.
 const DEFAULT_CREDIT = "작사·작곡 정완(글렙)";
 const SONGS = [
@@ -15,4 +16,5 @@ const SONGS = [
   { title: "그 짧은 순간", audio: "audio/08.mp3", cover: "covers/08.jpg", duration: "3:04" },
   { title: "접어 둔 꿈", audio: "audio/09.mp3", cover: "covers/09.jpg", duration: "3:33" },
   { title: "한 걸음씩", audio: "audio/10.mp3", cover: "covers/10.jpg", duration: "2:30" },
+  { title: "잘했어 (랩 버전 3)", audio: "audio/11.mp3", cover: "covers/11.jpg", plain: true, duration: "2:36" },
 ];
