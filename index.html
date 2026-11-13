@@ -3,45 +3,403 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="theme-color" content="#12344A">
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon.ico?v=3" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="jw3">
-<title>글렙</title>
+<meta name="apple-mobile-web-app-title" content="글렙 노래">
+<title>글렙의 노래</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,400&family=Noto+Serif+KR:wght@500;600&family=Noto+Sans+KR:wght@400;500;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
-<body class="home">
+<body class="songs">
 <div class="wrap">
-  <header class="hero">
-    <div class="mono">Г</div>
-    <h1>글렙</h1>
-    <div class="sub">노래와 러시아어 공부</div>
-  </header>
-  <nav class="doors" aria-label="바로가기">
-    <a class="door" href="songs.html">
-      <span class="door-mark" aria-hidden="true">♪</span>
-      <span class="door-label">노래 듣기</span>
-      <span class="door-go" aria-hidden="true">›</span>
-    </a>
-    <a class="door" href="study.html">
-      <span class="door-mark" aria-hidden="true">А</span>
-      <span class="door-label">러시아어 공부</span>
-      <span class="door-go" aria-hidden="true">›</span>
-    </a>
-  </nav>
+  <figure class="artist">
+    <img class="is-on" src="images/artist-1.jpg" alt="구름 바다 위 절벽에서 팔을 편 글렙">
+    <img src="images/artist-2.jpg" alt="초원을 달리는 기차 문가에 기타를 들고 앉은 글렙" loading="lazy">
+  </figure>
+  <script>
+  (function () {
+    var box = document.querySelector(".artist");
+    if (!box || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var slides = box.querySelectorAll("img");
+    if (slides.length < 2) return;
+    var i = 0;
+    setInterval(function () {
+      slides[i].classList.remove("is-on");
+      i = (i + 1) % slides.length;
+      slides[i].classList.add("is-on");
+    }, 6000);
+  })();
+  </script>
+  <button type="button" class="playall" id="playAll" aria-pressed="false">
+    <span class="playall-mark" aria-hidden="true">♪</span>
+    <span id="playAllLabel">전곡 듣기</span>
+  </button>
+  <h1>글렙의 노래</h1>
+  <p class="song-lead">곡을 누르거나 전곡 듣기를 누르면 이 페이지에서 재생됩니다.</p>
+  <div class="playall-bar" id="playAllBar" hidden>
+    <button type="button" id="playPrev">이전 곡</button>
+    <p class="playall-status" id="playAllStatus" aria-live="polite"></p>
+    <button type="button" id="playNext">다음 곡</button>
+  </div>
+  <div id="songList" class="song-list"></div>
 </div>
+<audio id="player" preload="auto" playsinline></audio>
+<script src="songs.js"></script>
+<script>
+const root = document.getElementById("songList");
+const player = document.getElementById("player");
+const playAll = document.getElementById("playAll");
+const playAllLabel = document.getElementById("playAllLabel");
+const playAllBar = document.getElementById("playAllBar");
+const playAllStatus = document.getElementById("playAllStatus");
+const playPrev = document.getElementById("playPrev");
+const playNext = document.getElementById("playNext");
+const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
+const FADE_MS = 900;
+const GAP_MS = 3000;
+const cards = [];
+let playlist = false;
+let cursor = -1;
+let phase = "idle";
+let fadeFrame = 0;
+let gapTimer = 0;
+let userPaused = false;
+
+function pageHidden() {
+  return document.hidden || document.visibilityState === "hidden";
+}
+
+function clearGapTimer() {
+  if (gapTimer) {
+    clearTimeout(gapTimer);
+    gapTimer = 0;
+  }
+}
+
+function setCurrent(card) {
+  cards.forEach((item) => {
+    const on = item === card;
+    item.classList.toggle("current", on);
+    item.querySelector(".song-live").hidden = !on;
+    const cue = item.querySelector(".song-cue");
+    cue.textContent = on ? "❚❚" : "▶";
+    if (on) item.setAttribute("aria-current", "true");
+    else item.removeAttribute("aria-current");
+  });
+}
+
+function updateTransport() {
+  if (!playlist || cursor < 0) {
+    if (playAllStatus.textContent !== "끝까지 들었습니다") playAllBar.hidden = true;
+    playAllLabel.textContent = "전곡 듣기";
+    playAll.setAttribute("aria-pressed", "false");
+    if (cursor < 0) {
+      playPrev.disabled = true;
+      playNext.disabled = true;
+    }
+    return;
+  }
+  const card = cards[cursor];
+  playAllBar.hidden = false;
+  playAllLabel.textContent = "정지";
+  playAll.setAttribute("aria-pressed", "true");
+  let text = (cursor + 1) + " / " + cards.length + " · " + card.dataset.title;
+  if (phase === "gap") text += " · 쉬는 중";
+  playAllStatus.textContent = text;
+  playPrev.disabled = cursor <= 0;
+  playNext.disabled = cursor >= cards.length - 1;
+}
+
+function artworkUrl(path) {
+  return new URL(path, location.href).href;
+}
+
+function updateSession() {
+  if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
+  const card = cursor >= 0 ? cards[cursor] : null;
+  if (!card) {
+    navigator.mediaSession.metadata = null;
+    navigator.mediaSession.playbackState = "none";
+    return;
+  }
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: card.dataset.title,
+    artist: "정완(글렙)",
+    album: "글렙의 노래",
+    artwork: [
+      { src: artworkUrl("icons/icon-1024.png?v=3"), sizes: "1024x1024", type: "image/png" },
+      { src: artworkUrl("icons/icon-512.png?v=3"), sizes: "512x512", type: "image/png" },
+      { src: artworkUrl("icons/icon-192.png?v=3"), sizes: "192x192", type: "image/png" },
+    ],
+  });
+  navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
+  if (phase === "song" && Number.isFinite(player.duration) && player.duration > 0) {
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: player.duration,
+        playbackRate: player.playbackRate || 1,
+        position: Math.min(player.currentTime || 0, player.duration),
+      });
+    } catch (e) {}
+  }
+}
+
+function fadeIn() {
+  cancelAnimationFrame(fadeFrame);
+  player.volume = 1;
+  if (pageHidden()) return;
+  const start = performance.now();
+  const step = (now) => {
+    if (pageHidden()) {
+      player.volume = 1;
+      return;
+    }
+    const t = (now - start) / FADE_MS;
+    if (!(t >= 0) || t >= 1) {
+      player.volume = 1;
+      return;
+    }
+    player.volume = t;
+    fadeFrame = requestAnimationFrame(step);
+  };
+  fadeFrame = requestAnimationFrame(step);
+}
+
+function stopPlayback() {
+  clearGapTimer();
+  cancelAnimationFrame(fadeFrame);
+  phase = "idle";
+  playlist = false;
+  cursor = -1;
+  player.pause();
+  player.removeAttribute("src");
+  setCurrent(null);
+  updateTransport();
+  updateSession();
+}
+
+function finishPlaylist() {
+  clearGapTimer();
+  cancelAnimationFrame(fadeFrame);
+  phase = "idle";
+  playlist = false;
+  player.pause();
+  player.removeAttribute("src");
+  setCurrent(null);
+  playAllLabel.textContent = "전곡 듣기";
+  playAll.setAttribute("aria-pressed", "false");
+  playAllBar.hidden = false;
+  playAllStatus.textContent = "끝까지 들었습니다";
+  playPrev.disabled = true;
+  playNext.disabled = true;
+  cursor = -1;
+  updateSession();
+}
+
+function playAudio() {
+  const pending = player.play();
+  const after = (failed) => {
+    updateTransport();
+    updateSession();
+    if (failed && playlist && cursor >= 0 && cards[cursor]) {
+      playAllStatus.textContent = (cursor + 1) + " / " + cards.length + " · " + cards[cursor].dataset.title + " · 재생되지 않았습니다";
+    }
+  };
+  const retry = () => {
+    const again = player.play();
+    if (again && typeof again.then === "function") {
+      again.then(() => after(false)).catch(() => after(true));
+    } else {
+      after(!again);
+    }
+  };
+  if (pending && typeof pending.then === "function") {
+    pending.then(() => after(false)).catch(retry);
+  } else {
+    after(false);
+  }
+}
+
+function startSong(index, fade) {
+  clearGapTimer();
+  if (index < 0 || index >= cards.length) {
+    finishPlaylist();
+    return;
+  }
+  playlist = true;
+  userPaused = false;
+  cursor = index;
+  phase = "song";
+  cancelAnimationFrame(fadeFrame);
+  player.volume = 1;
+  player.src = cards[index].dataset.audio;
+  playAudio();
+  if (fade && !pageHidden()) fadeIn();
+  setCurrent(cards[index]);
+  updateTransport();
+  updateSession();
+  if (!pageHidden()) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    cards[index].scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }
+}
+
+function scheduleNext() {
+  clearGapTimer();
+  if (!playlist || cursor + 1 >= cards.length) {
+    finishPlaylist();
+    return;
+  }
+  if (pageHidden()) {
+    startSong(cursor + 1, false);
+    return;
+  }
+  phase = "gap";
+  updateTransport();
+  updateSession();
+  gapTimer = setTimeout(() => {
+    gapTimer = 0;
+    if (phase !== "gap" || !playlist) return;
+    startSong(cursor + 1, true);
+  }, GAP_MS);
+}
+
+player.addEventListener("ended", () => {
+  if (phase !== "song") return;
+  scheduleNext();
+});
+document.addEventListener("visibilitychange", () => {
+  if (!playlist || phase !== "gap") return;
+  clearGapTimer();
+  startSong(cursor + 1, !pageHidden());
+});
+player.addEventListener("play", updateSession);
+player.addEventListener("pause", updateSession);
+player.addEventListener("timeupdate", () => {
+  if (phase === "song") updateSession();
+});
+
+if ("mediaSession" in navigator) {
+  const bind = (name, fn) => {
+    try { navigator.mediaSession.setActionHandler(name, fn); } catch (e) {}
+  };
+  bind("play", () => {
+    userPaused = false;
+    playAudio();
+  });
+  bind("pause", () => {
+    userPaused = true;
+    player.pause();
+    updateSession();
+  });
+  bind("previoustrack", () => {
+    if (cursor > 0) startSong(cursor - 1, false);
+    else if (cursor === 0) startSong(0, false);
+  });
+  bind("nexttrack", () => {
+    if (cursor + 1 < cards.length) startSong(cursor + 1, false);
+  });
+}
+
+if (!songs.length) {
+  const empty = document.createElement("p");
+  empty.className = "song-empty";
+  empty.textContent = "아직 등록된 노래가 없습니다.";
+  root.appendChild(empty);
+  playAll.disabled = true;
+} else {
+  let shown = 0;
+  songs.forEach((song) => {
+    const title = song && song.title ? String(song.title) : "";
+    const audio = song && typeof song.audio === "string" ? song.audio.trim() : "";
+    const duration = song && song.duration ? String(song.duration) : "";
+    const credit = (song && song.credit ? String(song.credit) : (typeof DEFAULT_CREDIT === "string" ? DEFAULT_CREDIT : "")).trim();
+    if (!title || !audio) return;
+    shown += 1;
+
+    const card = document.createElement("article");
+    card.className = "song-card";
+    card.dataset.audio = audio;
+    card.dataset.title = title;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "song-item";
+
+    const num = document.createElement("span");
+    num.className = "song-num";
+    num.textContent = String(shown);
+
+    const name = document.createElement("span");
+    name.className = "song-title";
+    const nameText = document.createElement("span");
+    nameText.className = "song-name";
+    nameText.textContent = title;
+    name.append(nameText);
+    if (credit) {
+      const creditEl = document.createElement("span");
+      creditEl.className = "song-credit";
+      creditEl.textContent = credit;
+      name.append(creditEl);
+    }
+    const live = document.createElement("span");
+    live.className = "song-live";
+    live.textContent = "재생 중";
+    live.hidden = true;
+    name.append(live);
+    button.append(num, name);
+    if (duration) {
+      const dur = document.createElement("span");
+      dur.className = "song-dur";
+      dur.textContent = duration;
+      button.append(dur);
+    }
+    const cue = document.createElement("span");
+    cue.className = "song-cue";
+    cue.setAttribute("aria-hidden", "true");
+    cue.textContent = "▶";
+    button.append(cue);
+
+    button.addEventListener("click", () => {
+      const index = cards.indexOf(card);
+      if (playlist && cursor === index) {
+        stopPlayback();
+        return;
+      }
+      startSong(index, false);
+    });
+
+    card.append(button);
+    cards.push(card);
+    root.appendChild(card);
+  });
+  if (!cards.length) playAll.disabled = true;
+}
+
+playAll.addEventListener("click", () => {
+  if (playlist) stopPlayback();
+  else startSong(0, false);
+});
+playPrev.addEventListener("click", () => {
+  if (cursor > 0) startSong(cursor - 1, false);
+});
+playNext.addEventListener("click", () => {
+  if (cursor + 1 < cards.length) startSong(cursor + 1, false);
+});
+</script>
+</body>
+
 <script>
 if ("serviceWorker" in navigator) {
   var manifest = document.querySelector('link[rel="manifest"]');
   if (manifest) navigator.serviceWorker.register(new URL("sw.js", manifest.href));
 }
 </script>
-</body>
 </html>
