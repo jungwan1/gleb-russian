@@ -19,45 +19,28 @@
 </head>
 <body class="songs">
 <div class="wrap">
-  <header class="topbar">
-    <div>
-      <h1>글렙의 노래</h1>
-      <p class="credit-line">작사·작곡 정완(글렙)</p>
-    </div>
-    <button type="button" class="cont" id="playAll" aria-pressed="false">
-      <span id="playAllLabel">연속 듣기</span>
-    </button>
-  </header>
-  <div class="nowline" id="nowline" hidden>
-    <p class="now-title" id="nowTitle"></p>
-    <div class="next-marquee">
-      <p class="next-run" id="nextRun">
-        <span class="next-copy" id="nextText"></span>
-        <span class="next-copy" aria-hidden="true"></span>
-      </p>
-    </div>
-  </div>
-  <p class="playall-status" id="playAllStatus" aria-live="polite"></p>
-  <section class="stage" id="stage" hidden>
-    <div class="stage-art"><img id="stageArt" alt=""></div>
-    <p class="stage-title" id="stageTitle"></p>
-    <p class="stage-credit" id="stageCredit"></p>
-    <div class="stage-tools"><button type="button" class="textbtn" id="stageClose">목록 보기</button></div>
+  <section class="stage" id="stage">
+    <div class="stage-art"><img id="stageArt" src="covers/album.jpg" alt="글렙의 노래 표지"></div>
+    <h1 class="stage-title" id="stageTitle">글렙의 노래</h1>
+    <p class="stage-credit" id="stageCredit">작사·작곡 정완(글렙)</p>
+    <div class="stage-tools"><button type="button" class="textbtn" id="stageClose" hidden>목록 보기</button></div>
   </section>
   <div id="songList" class="song-list"></div>
 </div>
-<div class="dock" id="dock" hidden>
+<div class="dock" id="dock">
   <div class="dock-inner">
     <div class="dock-row">
       <img class="dock-art" id="dockArt" alt="">
       <p class="dock-title" id="dockTitle"></p>
     </div>
+    <p class="playall-status" id="playAllStatus" aria-live="polite"></p>
     <label class="times"><span id="timeNow">0:00</span><span id="timeTotal">0:00</span></label>
     <input class="seek" id="seek" type="range" min="0" max="1000" value="0" aria-label="재생 위치">
     <div class="transport">
       <button type="button" id="playPrev">이전</button>
       <button type="button" id="playPause">일시정지</button>
       <button type="button" id="playNext">다음</button>
+      <button type="button" id="playAll" aria-pressed="false"><span id="playAllLabel">연속 듣기</span></button>
     </div>
   </div>
 </div>
@@ -69,10 +52,6 @@ const player = document.getElementById("player");
 const playAll = document.getElementById("playAll");
 const playAllLabel = document.getElementById("playAllLabel");
 const playAllStatus = document.getElementById("playAllStatus");
-const nowline = document.getElementById("nowline");
-const nowTitle = document.getElementById("nowTitle");
-const nextRun = document.getElementById("nextRun");
-const nextCopies = nextRun.querySelectorAll(".next-copy");
 const playPrev = document.getElementById("playPrev");
 const playNext = document.getElementById("playNext");
 const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
@@ -99,17 +78,23 @@ function clearGapTimer() {
 
 function showCover(card) {
   const stage = document.getElementById("stage");
-  const dock = document.getElementById("dock");
   const art = document.getElementById("stageArt");
   const dockArt = document.getElementById("dockArt");
+  const close = document.getElementById("stageClose");
   if (!card) {
-    stage.hidden = true;
-    dock.hidden = true;
+    stage.hidden = false;
+    close.hidden = true;
     document.body.classList.remove("playing");
+    if (art.getAttribute("src") !== "covers/album.jpg") art.src = "covers/album.jpg";
+    art.alt = "글렙의 노래 표지";
+    dockArt.removeAttribute("src");
+    document.getElementById("stageTitle").textContent = "글렙의 노래";
+    document.getElementById("dockTitle").textContent = "";
+    document.getElementById("stageCredit").textContent = (typeof DEFAULT_CREDIT === "string" && DEFAULT_CREDIT) ? DEFAULT_CREDIT : "작사·작곡 정완(글렙)";
     return;
   }
   stage.hidden = false;
-  dock.hidden = false;
+  close.hidden = false;
   document.body.classList.add("playing");
   if (art.getAttribute("src") !== card.dataset.cover) {
     art.src = card.dataset.cover;
@@ -134,23 +119,6 @@ function setCurrent(card) {
   showCover(card);
 }
 
-function showNowNext(title, nextTitle) {
-  if (!title) {
-    nowline.hidden = true;
-    nowTitle.textContent = "";
-    nextCopies.forEach((el) => { el.textContent = ""; });
-    nextRun.style.animationDuration = "";
-    return;
-  }
-  nowline.hidden = false;
-  nowTitle.textContent = title;
-  const line = nextTitle ? "다음 · " + nextTitle : "마지막 곡입니다";
-  const gap = Math.max(160, nextRun.parentElement.clientWidth);
-  nextRun.style.setProperty("--next-gap", gap + "px");
-  nextCopies.forEach((el) => { el.textContent = line; });
-  nextRun.style.animationDuration = Math.max(12, Math.round((line.length + 8) * 0.45)) + "s";
-}
-
 function updateTransport() {
   const pauseBtn = document.getElementById("playPause");
   if (pauseBtn) pauseBtn.textContent = player.paused ? "재생" : "일시정지";
@@ -158,16 +126,12 @@ function updateTransport() {
     playAllLabel.textContent = "연속 듣기";
     playAll.setAttribute("aria-pressed", "false");
     if (cursor < 0 && playAllStatus.textContent !== "끝까지 들었습니다") playAllStatus.textContent = "";
-    showNowNext("");
     playPrev.disabled = true;
     playNext.disabled = true;
     return;
   }
-  const card = cards[cursor];
-  const upcoming = cards[cursor + 1];
   playAllLabel.textContent = "정지";
   playAll.setAttribute("aria-pressed", "true");
-  showNowNext(card.dataset.title, upcoming ? upcoming.dataset.title : "");
   playAllStatus.textContent = phase === "gap" ? "쉬는 중" : "";
   playPrev.disabled = cursor <= 0;
   playNext.disabled = cursor >= cards.length - 1;
@@ -249,7 +213,6 @@ function finishPlaylist() {
   setCurrent(null);
   playAllLabel.textContent = "연속 듣기";
   playAll.setAttribute("aria-pressed", "false");
-  showNowNext("");
   playAllStatus.textContent = "끝까지 들었습니다";
   playPrev.disabled = true;
   playNext.disabled = true;

@@ -85,53 +85,12 @@ body.songs:before{
 }
 body.songs .wrap{
   max-width:480px;
-  padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(18px + env(safe-area-inset-bottom,0px));
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(84px + env(safe-area-inset-bottom,0px));
 }
-body.songs.playing .wrap{padding-bottom:calc(188px + env(safe-area-inset-bottom,0px))}
-body.songs .song-card{scroll-margin-bottom:calc(188px + env(safe-area-inset-bottom,0px))}
-body.songs .topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;
-}
-body.songs .topbar h1{font-size:22px;text-align:left;line-height:1.2}
-body.songs .credit-line{margin:2px 0 0;font-size:11px;color:#ffe7b0;text-shadow:0 1px 6px rgba(0,0,0,.4)}
-body.songs .playall-status{margin:0 0 8px;text-align:left;color:#ffe7b0;font-size:12px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
+body.songs.playing .wrap{padding-bottom:calc(210px + env(safe-area-inset-bottom,0px))}
+body.songs .song-card{scroll-margin-bottom:calc(210px + env(safe-area-inset-bottom,0px))}
+body.songs .playall-status{margin:2px 0 0;text-align:center;color:#ffe7b0;font-size:12px;text-shadow:0 1px 6px rgba(0,0,0,.45)}
 body.songs .playall-status:empty{display:none;margin:0}
-body.songs .nowline{margin:2px 0 14px;background:none;border:0;box-shadow:none;padding:0}
-body.songs .nowline[hidden]{display:none}
-body.songs .now-title{
-  margin:0;font-family:"Noto Serif KR",serif;font-size:22px;font-weight:600;line-height:1.3;color:#fff8e8;
-  text-shadow:0 2px 16px rgba(0,0,0,.72),0 1px 2px rgba(0,0,0,.85);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-body.songs .next-marquee{
-  position:relative;height:1.45em;margin-top:3px;overflow:hidden;
-}
-body.songs .next-run{
-  position:absolute;left:0;top:0;display:flex;width:max-content;margin:0;
-  animation:next-ticker linear infinite;
-}
-body.songs .next-copy{
-  flex:none;padding-right:var(--next-gap,18em);font-family:"Noto Sans KR",sans-serif;font-size:13px;font-weight:500;
-  color:#ffe7b0;white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.75);
-}
-@keyframes next-ticker{
-  0%,14%{transform:translateX(0)}
-  100%{transform:translateX(-50%)}
-}
-@media (prefers-reduced-motion:reduce){
-  body.songs .next-run{position:static;animation:none;width:auto;display:block}
-  body.songs .next-copy[aria-hidden="true"]{display:none}
-  body.songs .next-copy{padding-right:0;white-space:normal}
-  body.songs .next-marquee{height:auto;overflow:visible}
-}
-body.songs .cont{
-  appearance:none;flex-shrink:0;min-height:44px;padding:8px 14px;border-radius:999px;
-  font-family:"Noto Sans KR",sans-serif;font-size:13px;font-weight:700;color:#3a2b12;
-  border:1px solid rgba(255,232,176,.85);
-  background:rgba(255,252,246,.72);
-  box-shadow:0 6px 16px rgba(0,0,0,.18);
-}
-body.songs .cont[aria-pressed="true"]{background:linear-gradient(180deg,#ead087,#c4a153)}
 body.songs .stage{margin:0 0 12px}
 body.songs .stage[hidden]{display:none}
 body.songs .stage-art{
@@ -141,7 +100,7 @@ body.songs .stage-art{
 }
 body.songs .stage-art img{display:block;width:100%;height:100%;object-fit:contain;background:#12344a}
 body.songs .stage-title{
-  margin:0;text-align:center;font-family:"Noto Serif KR",serif;font-size:18px;color:#fff;
+  margin:0;text-align:center;font-family:"Noto Serif KR",serif;font-size:22px;color:#fff;
   text-shadow:0 2px 10px rgba(0,0,0,.45);
 }
 body.songs .stage-credit{margin:2px 0 8px;text-align:center;font-size:12px;color:#ffe7b0}
@@ -171,6 +130,14 @@ body.songs .transport button{
   font-family:"Noto Sans KR",sans-serif;font-size:13px;font-weight:700;
 }
 body.songs .transport button:disabled{opacity:.4}
+body.songs #playAll[aria-pressed="true"]{background:linear-gradient(180deg,#ead087,#c4a153);color:#3a2b12}
+body.songs:not(.playing) .dock-row,
+body.songs:not(.playing) .times,
+body.songs:not(.playing) .seek,
+body.songs:not(.playing) #playPrev,
+body.songs:not(.playing) #playPause,
+body.songs:not(.playing) #playNext{display:none}
+body.songs .stage-title{text-align:center}
 body.songs .song-list{display:flex;flex-direction:column;gap:6px}
 body.songs .song-card{margin:0;background:transparent;border:0;box-shadow:none}
 body.songs .song-item{
@@ -285,7 +252,7 @@ body.home .sub{font-family:"Noto Serif KR",serif;font-style:normal;font-weight:5
   .door::after{display:none}
 }
 
-body.songs h1{font-size:28px;text-align:left;margin:4px 0 8px}
+body.songs h1{font-size:22px;text-align:center;margin:0}
 .artist{
   position:relative;width:min(100%,520px);margin:0 auto 18px;aspect-ratio:1;
   border-radius:22px;overflow:hidden;background:#12344A;
