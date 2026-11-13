@@ -28,6 +28,15 @@
       <span id="playAllLabel">연속 듣기</span>
     </button>
   </header>
+  <div class="nowline" id="nowline" hidden>
+    <p class="now-title" id="nowTitle"></p>
+    <div class="next-marquee">
+      <p class="next-run" id="nextRun">
+        <span class="next-copy" id="nextText"></span>
+        <span class="next-copy" aria-hidden="true"></span>
+      </p>
+    </div>
+  </div>
   <p class="playall-status" id="playAllStatus" aria-live="polite"></p>
   <section class="stage" id="stage" hidden>
     <div class="stage-art"><img id="stageArt" alt=""></div>
@@ -60,6 +69,10 @@ const player = document.getElementById("player");
 const playAll = document.getElementById("playAll");
 const playAllLabel = document.getElementById("playAllLabel");
 const playAllStatus = document.getElementById("playAllStatus");
+const nowline = document.getElementById("nowline");
+const nowTitle = document.getElementById("nowTitle");
+const nextRun = document.getElementById("nextRun");
+const nextCopies = nextRun.querySelectorAll(".next-copy");
 const playPrev = document.getElementById("playPrev");
 const playNext = document.getElementById("playNext");
 const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
@@ -121,6 +134,23 @@ function setCurrent(card) {
   showCover(card);
 }
 
+function showNowNext(title, nextTitle) {
+  if (!title) {
+    nowline.hidden = true;
+    nowTitle.textContent = "";
+    nextCopies.forEach((el) => { el.textContent = ""; });
+    nextRun.style.animationDuration = "";
+    return;
+  }
+  nowline.hidden = false;
+  nowTitle.textContent = title;
+  const line = nextTitle ? "다음 · " + nextTitle : "마지막 곡입니다";
+  const gap = Math.max(160, nextRun.parentElement.clientWidth);
+  nextRun.style.setProperty("--next-gap", gap + "px");
+  nextCopies.forEach((el) => { el.textContent = line; });
+  nextRun.style.animationDuration = Math.max(12, Math.round((line.length + 8) * 0.45)) + "s";
+}
+
 function updateTransport() {
   const pauseBtn = document.getElementById("playPause");
   if (pauseBtn) pauseBtn.textContent = player.paused ? "재생" : "일시정지";
@@ -128,16 +158,17 @@ function updateTransport() {
     playAllLabel.textContent = "연속 듣기";
     playAll.setAttribute("aria-pressed", "false");
     if (cursor < 0 && playAllStatus.textContent !== "끝까지 들었습니다") playAllStatus.textContent = "";
+    showNowNext("");
     playPrev.disabled = true;
     playNext.disabled = true;
     return;
   }
   const card = cards[cursor];
+  const upcoming = cards[cursor + 1];
   playAllLabel.textContent = "정지";
   playAll.setAttribute("aria-pressed", "true");
-  let text = (cursor + 1) + " / " + cards.length + " · " + card.dataset.title;
-  if (phase === "gap") text += " · 쉬는 중";
-  playAllStatus.textContent = text;
+  showNowNext(card.dataset.title, upcoming ? upcoming.dataset.title : "");
+  playAllStatus.textContent = phase === "gap" ? "쉬는 중" : "";
   playPrev.disabled = cursor <= 0;
   playNext.disabled = cursor >= cards.length - 1;
 }
@@ -218,6 +249,7 @@ function finishPlaylist() {
   setCurrent(null);
   playAllLabel.textContent = "연속 듣기";
   playAll.setAttribute("aria-pressed", "false");
+  showNowNext("");
   playAllStatus.textContent = "끝까지 들었습니다";
   playPrev.disabled = true;
   playNext.disabled = true;
