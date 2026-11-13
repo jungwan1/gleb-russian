@@ -116,12 +116,29 @@ body.songs.playing .stage-art{
   body.songs .stage-art{transition:none}
 }
 body.songs .stage-art img{display:block;width:100%;height:100%;object-fit:contain;background:#12344a}
+body.songs .stage-art .slide{
+  position:absolute;inset:0;z-index:1;object-fit:cover;opacity:0;
+  transition:opacity .7s ease;pointer-events:none;
+}
+body.songs .stage-art .slide.on{opacity:1}
+body.songs .stage-caption{
+  position:absolute;left:0;right:0;bottom:5%;z-index:2;
+  margin:0;padding:0 8%;text-align:center;pointer-events:none;
+}
+body.songs .slide-title{
+  display:none;margin:0 0 .2em;
+  font-family:"Noto Serif KR",serif;font-weight:600;line-height:1.25;
+  font-size:clamp(20px,7cqw,36px);color:#fff8e8;
+  text-shadow:0 2px 18px rgba(0,0,0,.8),0 1px 2px rgba(0,0,0,.9);
+}
+body.songs.playing .slide-title{display:block}
 body.songs .stage-credit{
-  position:absolute;left:0;right:0;bottom:0.45%;margin:0;padding:0 6%;
-  text-align:center;font-family:"Noto Sans KR",sans-serif;font-weight:500;line-height:1;
+  margin:0;text-align:center;font-family:"Noto Sans KR",sans-serif;font-weight:500;line-height:1.2;
   font-size:clamp(8px,3.2cqw,16px);color:#fff8e8;letter-spacing:.01em;
   text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.65);
-  pointer-events:none;
+}
+@media (prefers-reduced-motion:reduce){
+  body.songs .stage-art .slide{transition:none}
 }
 body.songs .stage-tools{display:flex;justify-content:center}
 body.songs .stage-tools button,.dock button,.times{font-family:"Noto Sans KR",sans-serif}

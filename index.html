@@ -22,7 +22,12 @@
   <section class="stage" id="stage">
     <div class="stage-art">
       <img id="stageArt" src="covers/album.jpg" alt="글렙의 노래 표지">
-      <p class="stage-credit" id="stageCredit">작사·작곡 정완(글렙)</p>
+      <img class="slide" id="slideA" alt="">
+      <img class="slide" id="slideB" alt="">
+      <div class="stage-caption">
+        <p class="slide-title" id="slideTitle"></p>
+        <p class="stage-credit" id="stageCredit">작사·작곡 정완(글렙)</p>
+      </div>
     </div>
   </section>
   <div class="list-pane">
@@ -149,7 +154,9 @@ function showCover(card) {
     art.alt = "글렙의 노래 표지";
     dockArt.removeAttribute("src");
     document.getElementById("dockTitle").textContent = "";
+    document.getElementById("slideTitle").textContent = "";
     document.getElementById("stageCredit").textContent = (typeof DEFAULT_CREDIT === "string" && DEFAULT_CREDIT) ? DEFAULT_CREDIT : "작사·작곡 정완(글렙)";
+    hideSlides();
     queueThumb();
     return;
   }
@@ -161,9 +168,100 @@ function showCover(card) {
   art.alt = card.dataset.title + " 표지";
   dockArt.alt = "";
   document.getElementById("dockTitle").textContent = card.dataset.title;
+  document.getElementById("slideTitle").textContent = card.dataset.title;
   document.getElementById("stageCredit").textContent = card.dataset.credit || "";
+  hideSlides();
+  syncSlides();
   queueThumb();
 }
+
+let slideBook = {};
+let shownSlide = "";
+const slideA = document.getElementById("slideA");
+const slideB = document.getElementById("slideB");
+let slideOnA = false;
+
+function songSlideKey() {
+  if (cursor < 0 || !cards[cursor]) return "";
+  const file = String(cards[cursor].dataset.audio || "").split("/").pop() || "";
+  return file.replace(/\.mp3$/i, "");
+}
+
+function cuesForSong() {
+  const list = slideBook[songSlideKey()];
+  return Array.isArray(list) ? list : null;
+}
+
+function cueAt(time, cues) {
+  let pick = cues[0];
+  for (let i = 0; i < cues.length; i++) {
+    const t = Number(cues[i] && cues[i].t);
+    if (t <= time + 0.02) pick = cues[i];
+    else break;
+  }
+  return pick;
+}
+
+function preloadUpcoming(cue, cues) {
+  const start = cues.indexOf(cue);
+  for (let i = start + 1; i < cues.length; i++) {
+    if (cues[i] && cues[i].img && cues[i].img !== cue.img) {
+      const img = new Image();
+      img.src = "slides/" + cues[i].img;
+      return;
+    }
+  }
+}
+
+function hideSlides() {
+  slideA.classList.remove("on");
+  slideB.classList.remove("on");
+  shownSlide = "";
+  document.getElementById("stageArt").style.visibility = "";
+}
+
+function revealSlide(incoming, outgoing, src) {
+  if (shownSlide !== src) return;
+  incoming.classList.add("on");
+  outgoing.classList.remove("on");
+  slideOnA = incoming === slideA;
+  document.getElementById("stageArt").style.visibility = "hidden";
+}
+
+function showSlide(cue, cues) {
+  if (!cue || !cue.img) return;
+  const src = "slides/" + String(cue.img);
+  preloadUpcoming(cue, cues);
+  if (src === shownSlide) return;
+  shownSlide = src;
+  const incoming = slideOnA ? slideB : slideA;
+  const outgoing = slideOnA ? slideA : slideB;
+  if (incoming.getAttribute("src") === src && incoming.complete && incoming.naturalWidth) {
+    revealSlide(incoming, outgoing, src);
+    return;
+  }
+  incoming.onload = () => {
+    incoming.onload = null;
+    revealSlide(incoming, outgoing, src);
+  };
+  incoming.src = src;
+  if (incoming.complete && incoming.naturalWidth) revealSlide(incoming, outgoing, src);
+}
+
+function syncSlides() {
+  if (!document.body.classList.contains("playing") || cursor < 0 || phase === "idle") {
+    hideSlides();
+    return;
+  }
+  const cues = cuesForSong();
+  if (!cues || !cues.length) return;
+  showSlide(cueAt(player.currentTime || 0, cues), cues);
+}
+
+fetch("slides/timings.json").then((res) => res.json()).then((data) => {
+  slideBook = data || {};
+  syncSlides();
+}).catch(() => {});
 
 function setCurrent(card) {
   cards.forEach((item) => {
@@ -506,11 +604,13 @@ seek.addEventListener("change", () => {
   player.currentTime = (Number(seek.value) / 1000) * player.duration;
 });
 player.addEventListener("timeupdate", () => {
+  if (phase === "song") syncSlides();
   if (phase !== "song" || !Number.isFinite(player.duration) || player.duration <= 0) return;
   timeNow.textContent = fmt(player.currentTime);
   timeTotal.textContent = fmt(player.duration);
   if (!seeking) seek.value = String(Math.round((player.currentTime / player.duration) * 1000));
 });
+player.addEventListener("seeked", () => { if (phase === "song") syncSlides(); });
 queueThumb();
 </script>
 <script>

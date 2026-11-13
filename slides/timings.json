@@ -1,0 +1,347 @@
+{
+ "01": [
+  {
+   "t": 0.0,
+   "img": "01-1.jpg",
+   "section": "intro/verse1"
+  },
+  {
+   "t": 35.8,
+   "img": "01-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 63.4,
+   "img": "01-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 76.5,
+   "img": "01-2.jpg",
+   "section": "chorus2 (variant: 독자는 나 하나뿐…)"
+  },
+  {
+   "t": 107.0,
+   "img": "01-2.jpg",
+   "section": "interlude"
+  },
+  {
+   "t": 120.0,
+   "img": "01-2.jpg",
+   "section": "final chorus"
+  },
+  {
+   "t": 130.5,
+   "img": "01-4.jpg",
+   "section": "outro (변경사항을 저장할까요 / 내일 이어서)"
+  }
+ ],
+ "02": [
+  {
+   "t": 0.0,
+   "img": "02-2.jpg",
+   "section": "chorus (opens the song)"
+  },
+  {
+   "t": 29.5,
+   "img": "02-1.jpg",
+   "section": "verse1"
+  },
+  {
+   "t": 72.9,
+   "img": "02-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 99.0,
+   "img": "02-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 129.5,
+   "img": "02-2.jpg",
+   "section": "chorus3 (quiet breakdown → build)"
+  },
+  {
+   "t": 156.0,
+   "img": "02-1.jpg",
+   "section": "outro (그 저녁이 와)"
+  }
+ ],
+ "03": [
+  {
+   "t": 0.0,
+   "img": "03-1.jpg",
+   "section": "verse1"
+  },
+  {
+   "t": 20.9,
+   "img": "03-1.jpg",
+   "section": "pre-chorus"
+  },
+  {
+   "t": 41.0,
+   "img": "03-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 63.3,
+   "img": "03-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 107.0,
+   "img": "03-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 124.2,
+   "img": "03-4.jpg",
+   "section": "bridge (언젠가 용기가 생기면)"
+  },
+  {
+   "t": 152.0,
+   "img": "03-4.jpg",
+   "section": "outro (instrumental)"
+  }
+ ],
+ "04": [
+  {
+   "t": 0.0,
+   "img": "04-1.jpg",
+   "section": "intro/verse1"
+  },
+  {
+   "t": 51.9,
+   "img": "04-1.jpg",
+   "section": "pre-chorus"
+  },
+  {
+   "t": 59.0,
+   "img": "04-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 88.0,
+   "img": "04-2.jpg",
+   "section": "interlude"
+  },
+  {
+   "t": 100.0,
+   "img": "04-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 133.8,
+   "img": "04-3.jpg",
+   "section": "pre-chorus"
+  },
+  {
+   "t": 145.5,
+   "img": "04-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 176.0,
+   "img": "04-4.jpg",
+   "section": "outro (창밖이 조금 밝아와 / 잠들어도 될 것 같아)"
+  }
+ ],
+ "05": [
+  {
+   "t": 0.0,
+   "img": "05-1.jpg",
+   "section": "intro/verse1"
+  },
+  {
+   "t": 60.5,
+   "img": "05-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 80.9,
+   "img": "05-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 101.0,
+   "img": "05-2.jpg",
+   "section": "chorus (quiet)"
+  },
+  {
+   "t": 119.5,
+   "img": "05-4.jpg",
+   "section": "outro (big final build)"
+  }
+ ],
+ "06": [
+  {
+   "t": 0.0,
+   "img": "06-1.jpg",
+   "section": "verse1"
+  },
+  {
+   "t": 41.2,
+   "img": "06-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 82.0,
+   "img": "06-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 124.9,
+   "img": "06-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 148.4,
+   "img": "06-4.jpg",
+   "section": "bridge (고마워 나의 인생아)"
+  },
+  {
+   "t": 177.3,
+   "img": "06-5.jpg",
+   "section": "final (몽골의 밤하늘 아래)"
+  }
+ ],
+ "07": [
+  {
+   "t": 0.0,
+   "img": "07-1.jpg",
+   "section": "intro/verse1"
+  },
+  {
+   "t": 43.0,
+   "img": "07-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 74.0,
+   "img": "07-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 113.7,
+   "img": "07-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 142.2,
+   "img": "07-4.jpg",
+   "section": "bridge (밤기차 / 자작나무)"
+  },
+  {
+   "t": 166.7,
+   "img": "07-5.jpg",
+   "section": "final/outro (혼자서도 괜찮았던 나)"
+  }
+ ],
+ "08": [
+  {
+   "t": 0.0,
+   "img": "08-1.jpg",
+   "section": "intro/verse1"
+  },
+  {
+   "t": 25.6,
+   "img": "08-1.jpg",
+   "section": "pre-chorus (어디야 잠깐 나와)"
+  },
+  {
+   "t": 39.7,
+   "img": "08-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 70.0,
+   "img": "08-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 99.5,
+   "img": "08-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 130.5,
+   "img": "08-3.jpg",
+   "section": "bridge (이번엔 내가 먼저 부를게)"
+  },
+  {
+   "t": 140.5,
+   "img": "08-4.jpg",
+   "section": "final chorus"
+  },
+  {
+   "t": 170.0,
+   "img": "08-4.jpg",
+   "section": "outro"
+  }
+ ],
+ "09": [
+  {
+   "t": 0.0,
+   "img": "09-1.jpg",
+   "section": "intro/verse1"
+  },
+  {
+   "t": 67.0,
+   "img": "09-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 107.0,
+   "img": "09-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 146.0,
+   "img": "09-4.jpg",
+   "section": "bridge (종이를 펼쳐 보았어)"
+  },
+  {
+   "t": 160.0,
+   "img": "09-5.jpg",
+   "section": "final (그 꿈도 나를 기다렸네)"
+  }
+ ],
+ "10": [
+  {
+   "t": 0.0,
+   "img": "10-1.jpg",
+   "section": "verse1"
+  },
+  {
+   "t": 26.6,
+   "img": "10-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 45.0,
+   "img": "10-3.jpg",
+   "section": "verse2"
+  },
+  {
+   "t": 60.7,
+   "img": "10-2.jpg",
+   "section": "chorus"
+  },
+  {
+   "t": 84.5,
+   "img": "10-4.jpg",
+   "section": "bridge"
+  },
+  {
+   "t": 101.7,
+   "img": "10-5.jpg",
+   "section": "final chorus"
+  },
+  {
+   "t": 124.0,
+   "img": "10-5.jpg",
+   "section": "outro"
+  }
+ ]
+}
