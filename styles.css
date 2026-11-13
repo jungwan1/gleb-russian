@@ -143,6 +143,14 @@ body.songs .stage-credit{
   font-size:clamp(8px,3.2cqw,16px);color:#fff8e8;letter-spacing:.01em;
   text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.65);
 }
+body.songs .media-mode{
+  position:absolute;right:8px;bottom:8px;z-index:4;
+  min-width:44px;min-height:44px;padding:6px 10px;border:0;border-radius:999px;
+  background:rgba(18,28,40,.42);color:rgba(255,248,232,.88);
+  font-family:"Noto Sans KR",sans-serif;font-size:11px;font-weight:500;
+  text-shadow:0 1px 2px rgba(0,0,0,.65);
+}
+body.songs .media-mode[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){
   body.songs .stage-art .slide,
   body.songs .stage-art .slide-video{transition:none}

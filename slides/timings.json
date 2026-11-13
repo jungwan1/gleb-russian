@@ -47,32 +47,40 @@
   {
    "t": 0.0,
    "img": "02-2.jpg",
-   "section": "chorus (opens the song)"
+   "section": "chorus (opens the song)",
+   "video": "02-0",
+   "loop": false
   },
   {
    "t": 29.5,
    "img": "02-1.jpg",
-   "section": "verse1"
+   "section": "verse1",
+   "video": "02-1"
   },
   {
    "t": 72.9,
    "img": "02-2.jpg",
-   "section": "chorus"
+   "section": "chorus",
+   "video": "02-2"
   },
   {
    "t": 99.0,
    "img": "02-3.jpg",
-   "section": "verse2"
+   "section": "verse2",
+   "video": "02-3"
   },
   {
    "t": 129.5,
    "img": "02-2.jpg",
-   "section": "chorus3 (quiet breakdown → build)"
+   "section": "chorus3 (quiet breakdown → build)",
+   "video": "02-2"
   },
   {
    "t": 156.0,
    "img": "02-1.jpg",
-   "section": "outro (그 저녁이 와)"
+   "section": "outro (그 저녁이 와)",
+   "video": "02-4",
+   "loop": false
   }
  ],
  "03": [
