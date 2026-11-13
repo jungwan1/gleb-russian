@@ -3,14 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#12344A">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="jw3">
 <title>글렙의 노래</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +14,6 @@
 </head>
 <body class="songs">
 <div class="wrap">
-  <a class="back" href="index.html">← 홈</a>
   <figure class="artist">
     <img class="is-on" src="images/artist-1.jpg" alt="구름 바다 위 절벽에서 팔을 편 글렙">
     <img src="images/artist-2.jpg" alt="초원을 달리는 기차 문가에 기타를 들고 앉은 글렙" loading="lazy">
@@ -63,22 +57,25 @@ const playAllStatus = document.getElementById("playAllStatus");
 const playPrev = document.getElementById("playPrev");
 const playNext = document.getElementById("playNext");
 const songs = (typeof SONGS !== "undefined" && Array.isArray(SONGS)) ? SONGS : [];
-const GAP = "audio/gap3s.mp3";
 const FADE_MS = 900;
+const GAP_MS = 3000;
 const cards = [];
 let playlist = false;
 let cursor = -1;
 let phase = "idle";
 let fadeFrame = 0;
+let gapTimer = 0;
 let userPaused = false;
 
 function pageHidden() {
   return document.hidden || document.visibilityState === "hidden";
 }
 
-function fileName(src) {
-  try { return new URL(src, location.href).pathname.split("/").pop(); }
-  catch (e) { return ""; }
+function clearGapTimer() {
+  if (gapTimer) {
+    clearTimeout(gapTimer);
+    gapTimer = 0;
+  }
 }
 
 function setCurrent(card) {
@@ -171,6 +168,7 @@ function fadeIn() {
 }
 
 function stopPlayback() {
+  clearGapTimer();
   cancelAnimationFrame(fadeFrame);
   phase = "idle";
   playlist = false;
@@ -183,6 +181,7 @@ function stopPlayback() {
 }
 
 function finishPlaylist() {
+  clearGapTimer();
   cancelAnimationFrame(fadeFrame);
   phase = "idle";
   playlist = false;
@@ -199,7 +198,32 @@ function finishPlaylist() {
   updateSession();
 }
 
+function playAudio() {
+  const pending = player.play();
+  const after = (failed) => {
+    updateTransport();
+    updateSession();
+    if (failed && playlist && cursor >= 0 && cards[cursor]) {
+      playAllStatus.textContent = (cursor + 1) + " / " + cards.length + " · " + cards[cursor].dataset.title + " · 재생되지 않았습니다";
+    }
+  };
+  const retry = () => {
+    const again = player.play();
+    if (again && typeof again.then === "function") {
+      again.then(() => after(false)).catch(() => after(true));
+    } else {
+      after(!again);
+    }
+  };
+  if (pending && typeof pending.then === "function") {
+    pending.then(() => after(false)).catch(retry);
+  } else {
+    after(false);
+  }
+}
+
 function startSong(index, fade) {
+  clearGapTimer();
   if (index < 0 || index >= cards.length) {
     finishPlaylist();
     return;
@@ -211,8 +235,7 @@ function startSong(index, fade) {
   cancelAnimationFrame(fadeFrame);
   player.volume = 1;
   player.src = cards[index].dataset.audio;
-  const pending = player.play();
-  if (pending) pending.catch(() => {});
+  playAudio();
   if (fade && !pageHidden()) fadeIn();
   setCurrent(cards[index]);
   updateTransport();
@@ -223,25 +246,8 @@ function startSong(index, fade) {
   }
 }
 
-function beginGap() {
-  phase = "gap";
-  cancelAnimationFrame(fadeFrame);
-  player.volume = 1;
-  player.src = GAP;
-  const pending = player.play();
-  if (pending) pending.catch(() => {});
-  updateTransport();
-  updateSession();
-}
-
-player.addEventListener("ended", () => {
-  const name = fileName(player.currentSrc || player.src);
-  if (name === "gap3s.mp3") {
-    if (phase !== "gap") return;
-    startSong(cursor + 1, true);
-    return;
-  }
-  if (phase !== "song") return;
+function scheduleNext() {
+  clearGapTimer();
   if (!playlist || cursor + 1 >= cards.length) {
     finishPlaylist();
     return;
@@ -250,15 +256,24 @@ player.addEventListener("ended", () => {
     startSong(cursor + 1, false);
     return;
   }
-  beginGap();
+  phase = "gap";
+  updateTransport();
+  updateSession();
+  gapTimer = setTimeout(() => {
+    gapTimer = 0;
+    if (phase !== "gap" || !playlist) return;
+    startSong(cursor + 1, true);
+  }, GAP_MS);
+}
+
+player.addEventListener("ended", () => {
+  if (phase !== "song") return;
+  scheduleNext();
 });
 document.addEventListener("visibilitychange", () => {
-  if (!playlist || cursor < 0) return;
-  if (pageHidden()) {
-    if (phase === "gap") startSong(cursor + 1, false);
-    return;
-  }
-  if (phase === "gap" && (player.ended || player.paused)) startSong(cursor + 1, true);
+  if (!playlist || phase !== "gap") return;
+  clearGapTimer();
+  startSong(cursor + 1, !pageHidden());
 });
 player.addEventListener("play", updateSession);
 player.addEventListener("pause", updateSession);
@@ -272,9 +287,7 @@ if ("mediaSession" in navigator) {
   };
   bind("play", () => {
     userPaused = false;
-    const pending = player.play();
-    if (pending) pending.catch(() => {});
-    updateSession();
+    playAudio();
   });
   bind("pause", () => {
     userPaused = true;
@@ -375,12 +388,6 @@ playPrev.addEventListener("click", () => {
 playNext.addEventListener("click", () => {
   if (cursor + 1 < cards.length) startSong(cursor + 1, false);
 });
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  var manifest = document.querySelector('link[rel="manifest"]');
-  if (manifest) navigator.serviceWorker.register(new URL("sw.js", manifest.href));
-}
 </script>
 </body>
 </html>
