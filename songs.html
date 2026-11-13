@@ -126,6 +126,7 @@ function scrollFromPointer(e) {
 
 listScroll.addEventListener("scroll", updateListThumb, { passive: true });
 window.addEventListener("resize", updateListThumb);
+if (window.ResizeObserver) new ResizeObserver(updateListThumb).observe(listScroll);
 listTrack.addEventListener("pointerdown", (e) => {
   const thumb = listThumb.getBoundingClientRect();
   const onThumb = e.clientY >= thumb.top && e.clientY <= thumb.bottom;
