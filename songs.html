@@ -70,6 +70,11 @@ let playlist = false;
 let cursor = -1;
 let phase = "idle";
 let fadeFrame = 0;
+let userPaused = false;
+
+function pageHidden() {
+  return document.hidden || document.visibilityState === "hidden";
+}
 
 function fileName(src) {
   try { return new URL(src, location.href).pathname.split("/").pop(); }
@@ -110,8 +115,12 @@ function updateTransport() {
   playNext.disabled = cursor >= cards.length - 1;
 }
 
+function artworkUrl(path) {
+  return new URL(path, location.href).href;
+}
+
 function updateSession() {
-  if (!("mediaSession" in navigator)) return;
+  if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
   const card = cursor >= 0 ? cards[cursor] : null;
   if (!card) {
     navigator.mediaSession.metadata = null;
@@ -122,6 +131,11 @@ function updateSession() {
     title: card.dataset.title,
     artist: "정완(글렙)",
     album: "글렙의 노래",
+    artwork: [
+      { src: artworkUrl("images/artist-1.jpg"), sizes: "1200x1200", type: "image/jpeg" },
+      { src: artworkUrl("icons/icon-512.png"), sizes: "512x512", type: "image/png" },
+      { src: artworkUrl("icons/icon-192.png"), sizes: "192x192", type: "image/png" },
+    ],
   });
   navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
   if (phase === "song" && Number.isFinite(player.duration) && player.duration > 0) {
@@ -138,8 +152,13 @@ function updateSession() {
 function fadeIn() {
   cancelAnimationFrame(fadeFrame);
   player.volume = 1;
+  if (pageHidden()) return;
   const start = performance.now();
   const step = (now) => {
+    if (pageHidden()) {
+      player.volume = 1;
+      return;
+    }
     const t = (now - start) / FADE_MS;
     if (!(t >= 0) || t >= 1) {
       player.volume = 1;
@@ -186,6 +205,7 @@ function startSong(index, fade) {
     return;
   }
   playlist = true;
+  userPaused = false;
   cursor = index;
   phase = "song";
   cancelAnimationFrame(fadeFrame);
@@ -193,12 +213,14 @@ function startSong(index, fade) {
   player.src = cards[index].dataset.audio;
   const pending = player.play();
   if (pending) pending.catch(() => {});
-  if (fade) fadeIn();
+  if (fade && !pageHidden()) fadeIn();
   setCurrent(cards[index]);
   updateTransport();
   updateSession();
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  cards[index].scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  if (!pageHidden()) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    cards[index].scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }
 }
 
 function beginGap() {
@@ -224,7 +246,23 @@ player.addEventListener("ended", () => {
     finishPlaylist();
     return;
   }
+  if (pageHidden()) {
+    startSong(cursor + 1, false);
+    return;
+  }
   beginGap();
+});
+document.addEventListener("visibilitychange", () => {
+  if (!playlist || cursor < 0) return;
+  if (pageHidden()) {
+    if (phase === "gap") startSong(cursor + 1, false);
+    return;
+  }
+  if (phase === "gap" && (player.ended || player.paused)) startSong(cursor + 1, true);
+  else if (phase === "song" && player.paused && !userPaused) {
+    const pending = player.play();
+    if (pending) pending.catch(() => {});
+  }
 });
 player.addEventListener("play", updateSession);
 player.addEventListener("pause", updateSession);
@@ -237,10 +275,16 @@ if ("mediaSession" in navigator) {
     try { navigator.mediaSession.setActionHandler(name, fn); } catch (e) {}
   };
   bind("play", () => {
+    userPaused = false;
     const pending = player.play();
     if (pending) pending.catch(() => {});
+    updateSession();
   });
-  bind("pause", () => player.pause());
+  bind("pause", () => {
+    userPaused = true;
+    player.pause();
+    updateSession();
+  });
   bind("previoustrack", () => {
     if (cursor > 0) startSong(cursor - 1, false);
     else if (cursor === 0) startSong(0, false);

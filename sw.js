@@ -3,8 +3,14 @@ self.addEventListener("install", (event) => {
   event.waitUntil(Promise.resolve());
 });
 
+const CACHE = "jw3-pages-v2";
+
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
@@ -16,7 +22,7 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.includes("/audio/")) return;
 
   event.respondWith((async () => {
-    const cache = await caches.open("jw3-pages");
+    const cache = await caches.open(CACHE);
     try {
       const response = await fetch(request);
       if (response && response.ok) cache.put(request, response.clone());
