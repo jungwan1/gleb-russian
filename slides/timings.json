@@ -3,37 +3,44 @@
   {
    "t": 0.0,
    "img": "01-1.jpg",
-   "section": "intro/verse1"
+   "section": "intro/verse1",
+   "video": "01-1"
   },
   {
    "t": 35.8,
    "img": "01-2.jpg",
-   "section": "chorus"
+   "section": "chorus",
+   "video": "01-2"
   },
   {
    "t": 63.4,
    "img": "01-3.jpg",
-   "section": "verse2"
+   "section": "verse2",
+   "video": "01-3"
   },
   {
    "t": 76.5,
    "img": "01-2.jpg",
-   "section": "chorus2 (variant: 독자는 나 하나뿐…)"
+   "section": "chorus2 (variant: 독자는 나 하나뿐…)",
+   "video": "01-2"
   },
   {
    "t": 107.0,
    "img": "01-2.jpg",
-   "section": "interlude"
+   "section": "interlude",
+   "video": "01-2"
   },
   {
    "t": 120.0,
    "img": "01-2.jpg",
-   "section": "final chorus"
+   "section": "final chorus",
+   "video": "01-2"
   },
   {
    "t": 130.5,
    "img": "01-4.jpg",
-   "section": "outro (변경사항을 저장할까요 / 내일 이어서)"
+   "section": "outro (변경사항을 저장할까요 / 내일 이어서)",
+   "video": "01-4"
   }
  ],
  "02": [

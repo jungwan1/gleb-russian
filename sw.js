@@ -1,4 +1,4 @@
-const CACHE = "jw3-songs-v7";
+const CACHE = "jw3-songs-v8";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -30,6 +30,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.includes("/audio/")) return;
+  if (url.pathname.includes("/videos/")) return;
   if (!isHTML(request, url)) return;
 
   event.respondWith((async () => {
