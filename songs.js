@@ -16,5 +16,5 @@ const SONGS = [
   { title: "그 짧은 순간", audio: "audio/08.mp3", cover: "covers/08.jpg", duration: "3:04" },
   { title: "접어 둔 꿈", audio: "audio/09.mp3", cover: "covers/09.jpg", duration: "3:33" },
   { title: "한 걸음씩", audio: "audio/10.mp3", cover: "covers/10.jpg", duration: "2:30" },
-  { title: "잘했어 (랩 버전 3)", audio: "audio/11.mp3", cover: "covers/11.jpg", plain: true, duration: "2:36" },
+  { title: "잘했어", audio: "audio/11.mp3", cover: "covers/11.jpg", plain: true, duration: "2:36" },
 ];
