@@ -20,9 +20,10 @@
 <body class="songs">
 <div class="wrap">
   <section class="stage" id="stage">
-    <div class="stage-art"><img id="stageArt" src="covers/album.jpg" alt="글렙의 노래 표지"></div>
-    <h1 class="stage-title" id="stageTitle">글렙의 노래</h1>
-    <p class="stage-credit" id="stageCredit">작사·작곡 정완(글렙)</p>
+    <div class="stage-art">
+      <img id="stageArt" src="covers/album.jpg" alt="글렙의 노래 표지">
+      <p class="stage-credit" id="stageCredit">작사·작곡 정완(글렙)</p>
+    </div>
     <div class="stage-tools"><button type="button" class="textbtn" id="stageClose" hidden>목록 보기</button></div>
   </section>
   <div id="songList" class="song-list"></div>
@@ -88,7 +89,6 @@ function showCover(card) {
     if (art.getAttribute("src") !== "covers/album.jpg") art.src = "covers/album.jpg";
     art.alt = "글렙의 노래 표지";
     dockArt.removeAttribute("src");
-    document.getElementById("stageTitle").textContent = "글렙의 노래";
     document.getElementById("dockTitle").textContent = "";
     document.getElementById("stageCredit").textContent = (typeof DEFAULT_CREDIT === "string" && DEFAULT_CREDIT) ? DEFAULT_CREDIT : "작사·작곡 정완(글렙)";
     return;
@@ -102,7 +102,6 @@ function showCover(card) {
   }
   art.alt = card.dataset.title + " 표지";
   dockArt.alt = "";
-  document.getElementById("stageTitle").textContent = card.dataset.title;
   document.getElementById("dockTitle").textContent = card.dataset.title;
   document.getElementById("stageCredit").textContent = card.dataset.credit || "";
 }

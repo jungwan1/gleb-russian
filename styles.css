@@ -94,16 +94,19 @@ body.songs .playall-status:empty{display:none;margin:0}
 body.songs .stage{margin:0 0 12px}
 body.songs .stage[hidden]{display:none}
 body.songs .stage-art{
+  position:relative;container-type:inline-size;
   width:min(72vw,280px);aspect-ratio:1;margin:0 auto 8px;border-radius:18px;overflow:hidden;
   background:#12344a;border:1px solid rgba(255,232,176,.75);
   box-shadow:0 14px 30px rgba(0,0,0,.35);
 }
 body.songs .stage-art img{display:block;width:100%;height:100%;object-fit:contain;background:#12344a}
-body.songs .stage-title{
-  margin:0;text-align:center;font-family:"Noto Serif KR",serif;font-size:22px;color:#fff;
-  text-shadow:0 2px 10px rgba(0,0,0,.45);
+body.songs .stage-credit{
+  position:absolute;left:0;right:0;bottom:0.45%;margin:0;padding:0 6%;
+  text-align:center;font-family:"Noto Sans KR",sans-serif;font-weight:500;line-height:1;
+  font-size:clamp(8px,3.05cqw,11px);color:#fff8e8;letter-spacing:.01em;
+  text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.65);
+  pointer-events:none;
 }
-body.songs .stage-credit{margin:2px 0 8px;text-align:center;font-size:12px;color:#ffe7b0}
 body.songs .stage-tools{display:flex;justify-content:center}
 body.songs .stage-tools button,.dock button,.times{font-family:"Noto Sans KR",sans-serif}
 body.songs .textbtn{
@@ -137,7 +140,6 @@ body.songs:not(.playing) .seek,
 body.songs:not(.playing) #playPrev,
 body.songs:not(.playing) #playPause,
 body.songs:not(.playing) #playNext{display:none}
-body.songs .stage-title{text-align:center}
 body.songs .song-list{display:flex;flex-direction:column;gap:6px}
 body.songs .song-card{margin:0;background:transparent;border:0;box-shadow:none}
 body.songs .song-item{
