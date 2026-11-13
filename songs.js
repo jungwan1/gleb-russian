@@ -14,4 +14,5 @@ const SONGS = [
   { title: "러시아에서 들을 노래", audio: "audio/07.mp3", duration: "3:23" },
   { title: "그 짧은 순간", audio: "audio/08.mp3", duration: "3:04" },
   { title: "접어 둔 꿈", audio: "audio/09.mp3", duration: "3:33" },
+  { title: "한 걸음씩", audio: "audio/10.mp3", duration: "2:30" },
 ];
