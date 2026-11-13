@@ -259,10 +259,6 @@ document.addEventListener("visibilitychange", () => {
     return;
   }
   if (phase === "gap" && (player.ended || player.paused)) startSong(cursor + 1, true);
-  else if (phase === "song" && player.paused && !userPaused) {
-    const pending = player.play();
-    if (pending) pending.catch(() => {});
-  }
 });
 player.addEventListener("play", updateSession);
 player.addEventListener("pause", updateSession);
