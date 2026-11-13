@@ -144,13 +144,23 @@ body.songs .stage-credit{
   text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.65);
 }
 body.songs .media-mode{
-  position:absolute;right:8px;bottom:8px;z-index:4;
-  min-width:44px;min-height:44px;padding:6px 10px;border:0;border-radius:999px;
-  background:rgba(18,28,40,.42);color:rgba(255,248,232,.88);
-  font-family:"Noto Sans KR",sans-serif;font-size:11px;font-weight:500;
-  text-shadow:0 1px 2px rgba(0,0,0,.65);
+  position:absolute;top:10px;right:10px;z-index:4;
+  appearance:none;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  min-height:40px;padding:0 12px;border-radius:999px;
+  border:1.5px solid #e0b85a;
+  background:#12344a;color:#ead087;
+  font-family:"Noto Sans KR",sans-serif;font-size:12px;font-weight:700;line-height:1;
+  box-shadow:0 4px 12px rgba(0,0,0,.45);
+  transition:transform .12s ease,box-shadow .12s ease;
 }
+body.songs .media-mode::before{content:"▶";font-size:11px;line-height:1}
+body.songs .media-mode[aria-pressed="true"]::before{content:"▣"}
+body.songs .media-mode:active{transform:translateY(1px) scale(.97);box-shadow:0 1px 4px rgba(0,0,0,.4)}
 body.songs .media-mode[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){
+  body.songs .media-mode{transition:none}
+}
 @media (prefers-reduced-motion:reduce){
   body.songs .stage-art .slide,
   body.songs .stage-art .slide-video{transition:none}
