@@ -106,9 +106,11 @@ body.songs .stage-art{
   box-shadow:0 14px 30px rgba(0,0,0,.35);
   transition:width .48s ease;
 }
+body.songs.playing .stage{margin-left:0;margin-right:0}
 body.songs.playing .stage-art{
-  width:min(92vw,375px);
-  width:min(92vw,375px,calc(1.5 * (100dvh - 340px)));
+  width:100%;
+  width:min(100%,500px,calc(2 * (100dvh - 340px)));
+  border-radius:12px;
 }
 @media (prefers-reduced-motion:reduce){
   body.songs .stage-art{transition:none}
@@ -117,7 +119,7 @@ body.songs .stage-art img{display:block;width:100%;height:100%;object-fit:contai
 body.songs .stage-credit{
   position:absolute;left:0;right:0;bottom:0.45%;margin:0;padding:0 6%;
   text-align:center;font-family:"Noto Sans KR",sans-serif;font-weight:500;line-height:1;
-  font-size:clamp(8px,3.05cqw,11px);color:#fff8e8;letter-spacing:.01em;
+  font-size:clamp(8px,3.2cqw,16px);color:#fff8e8;letter-spacing:.01em;
   text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.65);
   pointer-events:none;
 }
