@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest?v=3">
 <meta name="theme-color" content="#12344A">
 <link rel="icon" href="favicon.ico?v=3" sizes="any">
@@ -19,36 +19,38 @@
 </head>
 <body class="songs">
 <div class="wrap">
-  <figure class="artist">
-    <img class="is-on" src="images/artist-1.jpg" alt="구름 바다 위 절벽에서 팔을 편 글렙">
-    <img src="images/artist-2.jpg" alt="초원을 달리는 기차 문가에 기타를 들고 앉은 글렙" loading="lazy">
-  </figure>
-  <script>
-  (function () {
-    var box = document.querySelector(".artist");
-    if (!box || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var slides = box.querySelectorAll("img");
-    if (slides.length < 2) return;
-    var i = 0;
-    setInterval(function () {
-      slides[i].classList.remove("is-on");
-      i = (i + 1) % slides.length;
-      slides[i].classList.add("is-on");
-    }, 6000);
-  })();
-  </script>
-  <button type="button" class="playall" id="playAll" aria-pressed="false">
-    <span class="playall-mark" aria-hidden="true">♪</span>
-    <span id="playAllLabel">전곡 듣기</span>
-  </button>
-  <h1>글렙의 노래</h1>
-  <p class="song-lead">곡을 누르거나 전곡 듣기를 누르면 이 페이지에서 재생됩니다.</p>
-  <div class="playall-bar" id="playAllBar" hidden>
-    <button type="button" id="playPrev">이전 곡</button>
-    <p class="playall-status" id="playAllStatus" aria-live="polite"></p>
-    <button type="button" id="playNext">다음 곡</button>
-  </div>
+  <header class="topbar">
+    <div>
+      <h1>글렙의 노래</h1>
+      <p class="credit-line">작사·작곡 정완(글렙)</p>
+    </div>
+    <button type="button" class="cont" id="playAll" aria-pressed="false">
+      <span id="playAllLabel">연속 듣기</span>
+    </button>
+  </header>
+  <p class="playall-status" id="playAllStatus" aria-live="polite"></p>
+  <section class="stage" id="stage" hidden>
+    <div class="stage-art"><img id="stageArt" alt=""></div>
+    <p class="stage-title" id="stageTitle"></p>
+    <p class="stage-credit" id="stageCredit"></p>
+    <div class="stage-tools"><button type="button" class="textbtn" id="stageClose">목록 보기</button></div>
+  </section>
   <div id="songList" class="song-list"></div>
+</div>
+<div class="dock" id="dock" hidden>
+  <div class="dock-inner">
+    <div class="dock-row">
+      <img class="dock-art" id="dockArt" alt="">
+      <p class="dock-title" id="dockTitle"></p>
+    </div>
+    <label class="times"><span id="timeNow">0:00</span><span id="timeTotal">0:00</span></label>
+    <input class="seek" id="seek" type="range" min="0" max="1000" value="0" aria-label="재생 위치">
+    <div class="transport">
+      <button type="button" id="playPrev">이전</button>
+      <button type="button" id="playPause">일시정지</button>
+      <button type="button" id="playNext">다음</button>
+    </div>
+  </div>
 </div>
 <audio id="player" preload="auto" playsinline></audio>
 <script src="songs.js"></script>
@@ -57,7 +59,6 @@ const root = document.getElementById("songList");
 const player = document.getElementById("player");
 const playAll = document.getElementById("playAll");
 const playAllLabel = document.getElementById("playAllLabel");
-const playAllBar = document.getElementById("playAllBar");
 const playAllStatus = document.getElementById("playAllStatus");
 const playPrev = document.getElementById("playPrev");
 const playNext = document.getElementById("playNext");
@@ -83,31 +84,55 @@ function clearGapTimer() {
   }
 }
 
+function showCover(card) {
+  const stage = document.getElementById("stage");
+  const dock = document.getElementById("dock");
+  const art = document.getElementById("stageArt");
+  const dockArt = document.getElementById("dockArt");
+  if (!card) {
+    stage.hidden = true;
+    dock.hidden = true;
+    document.body.classList.remove("playing");
+    return;
+  }
+  stage.hidden = false;
+  dock.hidden = false;
+  document.body.classList.add("playing");
+  if (art.getAttribute("src") !== card.dataset.cover) {
+    art.src = card.dataset.cover;
+    dockArt.src = card.dataset.cover;
+  }
+  art.alt = card.dataset.title + " 표지";
+  dockArt.alt = "";
+  document.getElementById("stageTitle").textContent = card.dataset.title;
+  document.getElementById("dockTitle").textContent = card.dataset.title;
+  document.getElementById("stageCredit").textContent = card.dataset.credit || "";
+}
+
 function setCurrent(card) {
   cards.forEach((item) => {
     const on = item === card;
     item.classList.toggle("current", on);
-    item.querySelector(".song-live").hidden = !on;
     const cue = item.querySelector(".song-cue");
     cue.textContent = on ? "❚❚" : "▶";
     if (on) item.setAttribute("aria-current", "true");
     else item.removeAttribute("aria-current");
   });
+  showCover(card);
 }
 
 function updateTransport() {
+  const pauseBtn = document.getElementById("playPause");
+  if (pauseBtn) pauseBtn.textContent = player.paused ? "재생" : "일시정지";
   if (!playlist || cursor < 0) {
-    if (playAllStatus.textContent !== "끝까지 들었습니다") playAllBar.hidden = true;
-    playAllLabel.textContent = "전곡 듣기";
+    playAllLabel.textContent = "연속 듣기";
     playAll.setAttribute("aria-pressed", "false");
-    if (cursor < 0) {
-      playPrev.disabled = true;
-      playNext.disabled = true;
-    }
+    if (cursor < 0 && playAllStatus.textContent !== "끝까지 들었습니다") playAllStatus.textContent = "";
+    playPrev.disabled = true;
+    playNext.disabled = true;
     return;
   }
   const card = cards[cursor];
-  playAllBar.hidden = false;
   playAllLabel.textContent = "정지";
   playAll.setAttribute("aria-pressed", "true");
   let text = (cursor + 1) + " / " + cards.length + " · " + card.dataset.title;
@@ -134,9 +159,7 @@ function updateSession() {
     artist: "정완(글렙)",
     album: "글렙의 노래",
     artwork: [
-      { src: artworkUrl("icons/icon-1024.png?v=3"), sizes: "1024x1024", type: "image/png" },
-      { src: artworkUrl("icons/icon-512.png?v=3"), sizes: "512x512", type: "image/png" },
-      { src: artworkUrl("icons/icon-192.png?v=3"), sizes: "192x192", type: "image/png" },
+      { src: artworkUrl(card.dataset.cover), sizes: "1024x1024", type: "image/jpeg" },
     ],
   });
   navigator.mediaSession.playbackState = player.paused ? "paused" : "playing";
@@ -193,9 +216,8 @@ function finishPlaylist() {
   player.pause();
   player.removeAttribute("src");
   setCurrent(null);
-  playAllLabel.textContent = "전곡 듣기";
+  playAllLabel.textContent = "연속 듣기";
   playAll.setAttribute("aria-pressed", "false");
-  playAllBar.hidden = false;
   playAllStatus.textContent = "끝까지 들었습니다";
   playPrev.disabled = true;
   playNext.disabled = true;
@@ -319,6 +341,7 @@ if (!songs.length) {
   songs.forEach((song) => {
     const title = song && song.title ? String(song.title) : "";
     const audio = song && typeof song.audio === "string" ? song.audio.trim() : "";
+    const cover = song && typeof song.cover === "string" ? song.cover.trim() : "";
     const duration = song && song.duration ? String(song.duration) : "";
     const credit = (song && song.credit ? String(song.credit) : (typeof DEFAULT_CREDIT === "string" ? DEFAULT_CREDIT : "")).trim();
     if (!title || !audio) return;
@@ -327,11 +350,18 @@ if (!songs.length) {
     const card = document.createElement("article");
     card.className = "song-card";
     card.dataset.audio = audio;
+    card.dataset.cover = cover;
     card.dataset.title = title;
+    card.dataset.credit = credit;
 
     const button = document.createElement("button");
     button.type = "button";
     button.className = "song-item";
+
+    const thumb = document.createElement("img");
+    thumb.className = "song-thumb";
+    thumb.alt = "";
+    thumb.src = cover;
 
     const num = document.createElement("span");
     num.className = "song-num";
@@ -354,7 +384,7 @@ if (!songs.length) {
     live.textContent = "재생 중";
     live.hidden = true;
     name.append(live);
-    button.append(num, name);
+    button.append(thumb, num, name);
     if (duration) {
       const dur = document.createElement("span");
       dur.className = "song-dur";
@@ -393,13 +423,53 @@ playPrev.addEventListener("click", () => {
 playNext.addEventListener("click", () => {
   if (cursor + 1 < cards.length) startSong(cursor + 1, false);
 });
+const playPause = document.getElementById("playPause");
+const seek = document.getElementById("seek");
+const timeNow = document.getElementById("timeNow");
+const timeTotal = document.getElementById("timeTotal");
+let seeking = false;
+function fmt(sec) {
+  if (!Number.isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return m + ":" + String(s).padStart(2, "0");
+}
+playPause.addEventListener("click", () => {
+  if (cursor < 0) return;
+  if (userPaused || (player.paused && phase === "song")) {
+    userPaused = false;
+    if (phase === "gap") scheduleNext();
+    else playAudio();
+    return;
+  }
+  userPaused = true;
+  clearGapTimer();
+  if (phase === "song") player.pause();
+  updateSession();
+  updateTransport();
+});
+seek.addEventListener("pointerdown", () => { seeking = true; });
+seek.addEventListener("pointerup", () => { seeking = false; });
+seek.addEventListener("change", () => {
+  seeking = false;
+  if (phase !== "song" || !Number.isFinite(player.duration)) return;
+  player.currentTime = (Number(seek.value) / 1000) * player.duration;
+});
+document.getElementById("stageClose").addEventListener("click", () => {
+  document.getElementById("stage").hidden = true;
+});
+player.addEventListener("timeupdate", () => {
+  if (phase !== "song" || !Number.isFinite(player.duration) || player.duration <= 0) return;
+  timeNow.textContent = fmt(player.currentTime);
+  timeTotal.textContent = fmt(player.duration);
+  if (!seeking) seek.value = String(Math.round((player.currentTime / player.duration) * 1000));
+});
 </script>
-</body>
-
 <script>
 if ("serviceWorker" in navigator) {
   var manifest = document.querySelector('link[rel="manifest"]');
   if (manifest) navigator.serviceWorker.register(new URL("sw.js", manifest.href));
 }
 </script>
+</body>
 </html>
