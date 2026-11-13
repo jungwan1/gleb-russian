@@ -3,45 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#12344A">
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="jw3">
-<title>글렙</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,400&family=Noto+Serif+KR:wght@500;600&family=Noto+Sans+KR:wght@400;500;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<meta http-equiv="refresh" content="0; url=songs.html">
+<link rel="canonical" href="songs.html">
+<title>글렙의 노래</title>
+<script>location.replace("songs.html");</script>
 </head>
-<body class="home">
-<div class="wrap">
-  <header class="hero">
-    <div class="mono">Г</div>
-    <h1>글렙</h1>
-    <div class="sub">노래와 러시아어 공부</div>
-  </header>
-  <nav class="doors" aria-label="바로가기">
-    <a class="door" href="songs.html">
-      <span class="door-mark" aria-hidden="true">♪</span>
-      <span class="door-label">노래 듣기</span>
-      <span class="door-go" aria-hidden="true">›</span>
-    </a>
-    <a class="door" href="study.html">
-      <span class="door-mark" aria-hidden="true">А</span>
-      <span class="door-label">러시아어 공부</span>
-      <span class="door-go" aria-hidden="true">›</span>
-    </a>
-  </nav>
-</div>
-<script>
-if ("serviceWorker" in navigator) {
-  var manifest = document.querySelector('link[rel="manifest"]');
-  if (manifest) navigator.serviceWorker.register(new URL("sw.js", manifest.href));
-}
-</script>
+<body>
+<p><a href="songs.html">글렙의 노래</a></p>
 </body>
 </html>

@@ -3,7 +3,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(Promise.resolve());
 });
 
-const CACHE = "jw3-pages-v2";
+const CACHE = "jw3-pages-v3";
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
