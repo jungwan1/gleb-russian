@@ -30,6 +30,7 @@
         <p class="slide-title" id="slideTitle"></p>
         <p class="stage-credit" id="stageCredit">작사·작곡 정완(글렙)</p>
       </div>
+      <button type="button" class="media-mode" id="mediaMode" hidden>영상 보기</button>
     </div>
   </section>
   <div class="list-pane">
@@ -151,9 +152,21 @@ listTrack.addEventListener("pointermove", (e) => {
 listTrack.addEventListener("pointerup", () => { thumbDrag = null; });
 listTrack.addEventListener("pointercancel", () => { thumbDrag = null; });
 
+let wantVideo = false;
+let videoSongKey = "";
+
+function rememberSong(card) {
+  const key = card ? String(card.dataset.audio || "") : "";
+  if (key !== videoSongKey) {
+    wantVideo = false;
+    videoSongKey = key;
+  }
+}
+
 function showCover(card) {
   const art = document.getElementById("stageArt");
   const dockArt = document.getElementById("dockArt");
+  rememberSong(card);
   if (!card) {
     document.body.classList.remove("playing");
     if (art.getAttribute("src") !== "covers/album.jpg") art.src = "covers/album.jpg";
@@ -164,6 +177,7 @@ function showCover(card) {
     document.getElementById("stageCredit").textContent = (typeof DEFAULT_CREDIT === "string" && DEFAULT_CREDIT) ? DEFAULT_CREDIT : "작사·작곡 정완(글렙)";
     document.querySelector(".stage-art").classList.remove("is-plain");
     hideSlides();
+    updateMediaButton();
     queueThumb();
     return;
   }
@@ -180,6 +194,7 @@ function showCover(card) {
   document.querySelector(".stage-art").classList.toggle("is-plain", card.dataset.plain === "1");
   hideSlides();
   syncSlides();
+  updateMediaButton();
   queueThumb();
 }
 
@@ -252,7 +267,8 @@ function hideClips() {
 
 function playClip(el) {
   el.muted = true;
-  if (player.paused) {
+  if (player.paused || (el.ended && !el.loop)) {
+    if (!player.paused && el.ended && !el.loop) return;
     el.pause();
     return;
   }
@@ -262,14 +278,21 @@ function playClip(el) {
   }
 }
 
-function showClip(id) {
-  if (!id) {
+function showClip(cue) {
+  const id = videoIdOf(cue);
+  const loop = !cue || cue.loop !== false;
+  if (!wantVideo || !id) {
     hideClips();
     return;
   }
   if (shownVideo === id) {
     const current = clipOnA ? clipA : clipB;
+    current.loop = loop;
     if (current.dataset.videoId === id && current.readyState >= 2 && !current.error) {
+      if (current.ended && !current.loop) {
+        current.classList.add("on");
+        return;
+      }
       current.classList.add("on");
       if (current.paused) playClip(current);
     }
@@ -285,10 +308,12 @@ function showClip(id) {
       incoming.classList.remove("on");
       return;
     }
+    incoming.loop = loop;
     incoming.classList.add("on");
     outgoing.classList.remove("on");
     outgoing.pause();
     clipOnA = incoming === clipA;
+    if (incoming.currentTime > 0.05) incoming.currentTime = 0;
     playClip(incoming);
   };
   incoming.oncanplay = () => { incoming.oncanplay = null; reveal(); };
@@ -312,7 +337,7 @@ function preloadUpcoming(cue, cues) {
     const img = new Image();
     img.src = "slides/" + nextImg;
   }
-  if (!nextVideo) return;
+  if (!wantVideo || !nextVideo) return;
   const spare = clips.find((el) => el.dataset.videoId !== shownVideo);
   if (spare && spare.dataset.videoId !== nextVideo) fillClip(spare, nextVideo);
 }
@@ -336,7 +361,7 @@ function revealSlide(incoming, outgoing, src) {
 function showSlide(cue, cues) {
   if (!cue || !cue.img) return;
   const src = "slides/" + String(cue.img);
-  showClip(videoIdOf(cue));
+  showClip(cue);
   preloadUpcoming(cue, cues);
   if (src === shownSlide) return;
   shownSlide = src;
@@ -362,7 +387,25 @@ function syncSlides() {
   const cues = cuesForSong();
   if (!cues || !cues.length) return;
   showSlide(cueAt(player.currentTime || 0, cues), cues);
+  updateMediaButton();
 }
+
+function updateMediaButton() {
+  const btn = document.getElementById("mediaMode");
+  const cues = cuesForSong();
+  const enabled = document.body.classList.contains("playing") && !!(cues && cues.some((cue) => videoIdOf(cue)));
+  btn.hidden = !enabled;
+  btn.textContent = wantVideo ? "사진 보기" : "영상 보기";
+  btn.setAttribute("aria-pressed", wantVideo ? "true" : "false");
+}
+
+document.getElementById("mediaMode").addEventListener("click", () => {
+  if (document.getElementById("mediaMode").hidden) return;
+  wantVideo = !wantVideo;
+  if (!wantVideo) hideClips();
+  syncSlides();
+  updateMediaButton();
+});
 
 fetch("slides/timings.json").then((res) => res.json()).then((data) => {
   slideBook = data || {};
@@ -718,8 +761,10 @@ player.addEventListener("timeupdate", () => {
 });
 player.addEventListener("seeked", () => { if (phase === "song") syncSlides(); });
 player.addEventListener("play", () => {
+  if (!wantVideo) return;
   const el = clipOnA ? clipA : clipB;
   if (!shownVideo || el.dataset.videoId !== shownVideo || el.readyState < 2 || el.error) return;
+  if (el.ended && !el.loop) return;
   el.muted = true;
   el.classList.add("on");
   const pending = el.play();
